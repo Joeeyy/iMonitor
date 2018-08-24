@@ -18,9 +18,10 @@
 import UIKit
 
 import NetworkExtension
+import testVPNServices
 
 class ViewController: UIViewController {
-    let TAG = "<testVPN> ViewController: "
+    let TAG = "<AINASSINE> ViewController: "
     
     // </ VPN related stuffs
     var VPNManagers = [NEVPNManager]()
