@@ -10,7 +10,7 @@
 
 import Foundation
 
-// Directions in which a flow can be closed for further data
+/// The directions in which a flow can be closed for further data.
 public enum TunnelConnectionCloseDirection: Int, CustomStringConvertible {
     case none = 1
     case read = 2
@@ -27,7 +27,7 @@ public enum TunnelConnectionCloseDirection: Int, CustomStringConvertible {
     }
 }
 
-// The results of opening a connection
+/// The results of opening a connection.
 public enum TunnelConnectionOpenResult: Int {
     case success = 0
     case invalidParam
@@ -37,50 +37,56 @@ public enum TunnelConnectionOpenResult: Int {
     case internalError
 }
 
-// a logical connection (or flow) of network data in the SimpleTunnel Protocol
+/// A logical connection (or flow) of network data in the SimpleTunnel protocol.
 open class Connection: NSObject {
+    
     // MARK: Properties
     
-    // The connection identifier
+    private let TAG = "Connection: "
+    
+    /// The connection identifier.
     open let identifier: Int
     
-    // The tunnel that contains this connection
+    /// The tunnel that contains the connection.
     open var tunnel: Tunnel?
     
-    // The list of data that needs to be written to the connection when it's possible
-    let saveData = SavedData()
+    /// The list of data that needs to be written to the connection when possible.
+    let savedData = SavedData()
     
-    // The directions in which a connection is closed.
+    /// The direction(s) in which the connection is closed.
     var currentCloseDirection = TunnelConnectionCloseDirection.none
     
-    // indicates that if the tunnel is being used by this connection exclusively
+    /// Indicates if the tunnel is being used by this connection exclusively.
     let isExclusiveTunnel: Bool
     
-    // indicates if the tunnel cannot be read from
+    /// Indicates if the connection cannot be read from.
     open var isClosedForRead: Bool {
         return currentCloseDirection != .none && currentCloseDirection != .write
     }
     
-    // indicates if the tunnel cannot be written to
+    /// Indicates if the connection cannot be written to.
     open var isClosedForWrite: Bool {
         return currentCloseDirection != .none && currentCloseDirection != .read
     }
     
-    // indicates if the tunnel is fully closed
+    /// Indicates if the connection is fully closed.
     open var isClosedCompletely: Bool {
         return currentCloseDirection == .all
     }
     
     // MARK: Initializers
+    
     public init(connectionIdentifier: Int, parentTunnel: Tunnel) {
+        testVPNLog(self.TAG + "init connection")
         tunnel = parentTunnel
         identifier = connectionIdentifier
         isExclusiveTunnel = false
         super.init()
         if let t = tunnel {
-            // add this tunnel to the tunnel's set of connections
+            // Add this connection to the tunnel's set of connections.
             t.addConnection(self)
         }
+        
     }
     
     public init(connectionIdentifier: Int) {
@@ -88,26 +94,28 @@ open class Connection: NSObject {
         identifier = connectionIdentifier
     }
     
-    // MARK: Interfaces
+    // MARK: Interface
     
-    // Set a new tunnel for the connection
+    /// Set a new tunnel for the connection.
     func setNewTunnel(_ newTunnel: Tunnel) {
+        testVPNLog(self.TAG + "set new tunnel")
         tunnel = newTunnel
         if let t = tunnel {
             t.addConnection(self)
         }
     }
     
-    // Close the connection
+    /// Close the connection.
     open func closeConnection(_ direction: TunnelConnectionCloseDirection) {
+        testVPNLog(self.TAG + "close connection")
         if direction != .none && direction != currentCloseDirection {
             currentCloseDirection = .all
         }
-        else{
+        else {
             currentCloseDirection = direction
         }
         
-        guard let currentTunnel = tunnel, currentCloseDirection == .all else {return}
+        guard let currentTunnel = tunnel , currentCloseDirection == .all else { return }
         
         if isExclusiveTunnel {
             currentTunnel.closeTunnel()
@@ -118,32 +126,33 @@ open class Connection: NSObject {
         }
     }
     
-    // Abort the connection
+    /// Abort the connection.
     open func abort(_ error: Int = 0) {
-        saveData.clear()
+        testVPNLog(self.TAG + "abort connection")
+        savedData.clear()
     }
     
-    // Send data on the connection
+    /// Send data on the connection.
     open func sendData(_ data: Data) {
     }
     
-    // Send data and destination host and port on the connection
+    /// Send data and the destination host and port on the connection.
     open func sendDataWithEndPoint(_ data: Data, host: String, port: Int) {
     }
     
-    // Send a list of IP packets and their related protocols on the connection
-    open func sendPackets(_ packets: [Data], protocol: [NSNumber]) {
+    /// Send a list of IP packets and their associated protocols on the connection.
+    open func sendPackets(_ packets: [Data], protocols: [NSNumber]) {
     }
     
-    // Send an indication to the remote end of the connection that the caller will not be reading any more data from the connection for a while
+    /// Send an indication to the remote end of the connection that the caller will not be reading any more data from the connection for a while.
     open func suspend() {
     }
     
-    // Send an indication to the remote end of the connection that the caller will read more data from the connection
+    /// Send an indication to the remote end of the connection that the caller is going to start reading more data from the connection.
     open func resume() {
     }
     
-    // Handle the "open completed" message send by Server side of SimpleTunnel
+    /// Handle the "open completed" message sent by the SimpleTunnel server.
     open func handleOpenCompleted(_ resultCode: TunnelConnectionOpenResult, properties: [NSObject: AnyObject]) {
     }
 }

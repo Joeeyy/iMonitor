@@ -11,45 +11,48 @@
 import Foundation
 import Darwin
 
-// SimpleTunnel Errors
+/// SimpleTunnel errors
 public enum SimpleTunnelError: Error {
+    case badConfiguration
     case badConnection
-    case banConfiguration
     case internalError
 }
 
-// A queue of blobs of data. BLOB: Binary Large Object Data
+/// A queue of blobs of data
 class SavedData {
-    // MARK: Properties
     
-    // Each item in the list contains a data blob and an offset (in bytes) within the data blob of the data that is yet to be written.
+    // MARK: Properties
+    private let TAG = "SavedData"
+    
+    /// Each item in the list contains a data blob and an offset (in bytes) within the data blob of the data that is yet to be written.
     var chain = [(data: Data, offset: Int)]()
     
-    // A convinient property to determine if the list is empty
+    /// A convenience property to determine if the list is empty.
     var isEmpty: Bool {
         return chain.isEmpty
     }
     
-    // MARK: Interfaces
+    // MARK: Interface
     
-    // Add a data blob and offset to the end of the list
-    func append(_ data: Data, offset: Int){
-        chain.append(data: data, offset: offset)
+    /// Add a data blob and offset to the end of the list.
+    func append(_ data: Data, offset: Int) {
+        chain.append((data: data, offset: offset))
     }
     
-    // Write as mush of the data in the list as possible to a stream
+    /// Write as much of the data in the list as possible to a stream
     func writeToStream(_ stream: OutputStream) -> Bool {
+        testVPNLog(self.TAG + "write to stream")
         var result = true
         var stopIndex: Int?
         
         for (chainIndex, record) in chain.enumerated() {
-            let written = writeData(data: record.data, toStream: stream, startingAtOffset: record.offset)
+            let written = writeData(record.data, toStream: stream, startingAtOffset:record.offset)
             if written < 0 {
                 result = false
                 break
             }
             if written < (record.data.count - record.offset) {
-                // Failed to write all of the data in the blob, update the offset
+                // Failed to write all of the remaining data in this blob, update the offset.
                 chain[chainIndex] = (record.data, record.offset + written)
                 stopIndex = chainIndex
                 break
@@ -57,19 +60,19 @@ class SavedData {
         }
         
         if let removeEnd = stopIndex {
-            // we didn't write all of the data, remove what was written
+            // We did not write all of the data, remove what was written.
             if removeEnd > 0 {
                 chain.removeSubrange(0..<removeEnd)
             }
-        }else{
-            // All of the data is written
+        } else {
+            // All of the data was written.
             chain.removeAll(keepingCapacity: false)
         }
         
         return result
     }
     
-    // Remove all the data from the list
+    /// Remove all data from the list.
     func clear() {
         chain.removeAll(keepingCapacity: false)
     }
@@ -79,6 +82,7 @@ class SavedData {
 class SocketAddress6 {
     
     // MARK: Properties
+    private let TAG = "socket address 6"
     
     /// The sockaddr_in6 structure.
     var sin6: sockaddr_in6
@@ -120,6 +124,7 @@ class SocketAddress6 {
 class SocketAddress {
     
     // MARK: Properties
+    private let TAG = "Socket address"
     
     /// The sockaddr_in structure.
     var sin: sockaddr_in
@@ -162,7 +167,6 @@ class SocketAddress {
     }
 }
 
-
 // MARK: Utility Functions
 
 /// Convert a sockaddr structure to a string.
@@ -176,12 +180,14 @@ func saToString(_ sa: UnsafePointer<sockaddr>) -> String? {
     return String(cString: hostBuffer)
 }
 
-// write a blob of data to a stream starting from a particular offset
+/// Write a blob of data to a stream starting from a particular offset.
 func writeData(_ data: Data, toStream stream: OutputStream, startingAtOffset offset: Int) -> Int {
+    testVPNLog("function: writeData.")
     var written = 0
     var currentOffset = offset
     while stream.hasSpaceAvailable && currentOffset < data.count {
-        let writeResult = stream.write((data as NSData).bytes.bindMemory(to: UInt8.self, capacity: data.count)+currentOffset, maxLength: data.count - currentOffset)
+        
+        let writeResult = stream.write((data as NSData).bytes.bindMemory(to: UInt8.self, capacity: data.count) + currentOffset, maxLength: data.count - currentOffset)
         guard writeResult >= 0 else { return writeResult }
         
         written += writeResult
@@ -241,6 +247,8 @@ func rangeByMovingStartOfRange(_ range: Range<Int>, byCount: Int) -> CountableRa
     return (range.lowerBound + byCount)..<range.upperBound
 }
 
+
 public func testVPNLog(_ message: String){
-    NSLog(message)
+    NSLog("<AINASSINE> "+message)
 }
+

@@ -83,6 +83,8 @@ public protocol TunnelDelegate: class {
 open class Tunnel: NSObject {
     // MARK: Properties
     
+    private let TAG = "Tunnel: "
+    
     // Tunnel Delegate
     open weak var delegate: TunnelDelegate?
     
@@ -90,7 +92,7 @@ open class Tunnel: NSObject {
     var connections = [Int: Connection]()
     
     // The lists of data that needs to be written to the tunnel when possible
-    var saveData = SavedData()
+    var savedData = SavedData()
     
     // The SimpleTunnel Boujour service type
     class var serviceType: String { return "_tunnelserver._tcp" }
@@ -105,7 +107,7 @@ open class Tunnel: NSObject {
     class var packetSize: Int { return 8192 }
     
     // The maximum number of IP packets in a single SimpleTunnel data message.
-    class var maximumPacketPerMessage: Int { return 32 }
+    class var maximumPacketsPerMessage: Int { return 32 }
     
     // A list of all tunnels
     static var allTunnels = [Tunnel]()
@@ -114,13 +116,14 @@ open class Tunnel: NSObject {
     
     // Close the tunnel
     func closeTunnel(){
+        testVPNLog(self.TAG + "closing tunnel")
         for connection in connections.values {
             connection.tunnel = nil
             connection.abort()
         }
         connections.removeAll(keepingCapacity: false)
         
-        saveData.clear()
+        savedData.clear()
         
         if let index = Tunnel.allTunnels.index(where: { return $0 === self }) {
             Tunnel.allTunnels.remove(at: index)
@@ -129,11 +132,13 @@ open class Tunnel: NSObject {
     
     // Add a connection to the set
     func addConnection(_ connection: Connection){
+        testVPNLog(self.TAG + "adding connection")
         connections[connection.identifier] = connection
     }
     
     // Remove a connection from the set
     func dropConnection(_ connection: Connection){
+        testVPNLog(self.TAG + "droping connection")
         connections.removeValue(forKey: connection.identifier)
     }
     
@@ -147,12 +152,14 @@ open class Tunnel: NSObject {
     
     // Write some data (i.e., a serialized message) to the tunnel.
     func writeDataToTunnel(_ data: Data, startingAtOffset: Int) -> Int {
-        testVPNLog("<AINASSINE> testVPN Tunnel.swift: " + "writeDataToTunnel called on abstract base class")
+        testVPNLog(self.TAG + "data to be written: \(data)")
+        testVPNLog(self.TAG + "write data to tunnel")
         return -1
     }
     
     // Serialize a message
     func serializeMessage(_ messageProperties: [String: AnyObject]) -> Data? {
+        testVPNLog(self.TAG + "serialize message")
         var messageData: NSMutableData?
         do {
             /*
@@ -169,6 +176,7 @@ open class Tunnel: NSObject {
             messageData = NSMutableData(capacity: Int(totalLength))
             messageData?.append(&totalLength, length: MemoryLayout<UInt32>.size)
             messageData?.append(payload)
+            testVPNLog(self.TAG + "serialized message content(\(messageData?.length)): \(messageData)")
         }
         catch {
             testVPNLog("<AINASSINE> testVPN Tunnel.swift: " + "Failed to create a data object from a message property list: \(messageProperties)")
@@ -178,14 +186,14 @@ open class Tunnel: NSObject {
     
     // Send a message on the tunnel connection
     func sendMessage(_ messageProperties: [String: AnyObject]) -> Bool{
+        testVPNLog(self.TAG + "send message")
         var written: Int = 0
         
         guard let messageData = serializeMessage(messageProperties) else{
-            testVPNLog("<AINASSINE> testVPN Tunnel.swift: " + "Failed to create message data")
             return false
         }
         
-        if saveData.isEmpty {
+        if savedData.isEmpty {
             // There is nothing queued up to be sent, to directly write to the tunnel.
             written = writeDataToTunnel(messageData, startingAtOffset: 0)
             if written < 0{
@@ -195,7 +203,7 @@ open class Tunnel: NSObject {
         
         // If not all of the data was written, save the message data to be sent when possible
         if written < messageData.count {
-            saveData.append(messageData, offset: written)
+            savedData.append(messageData, offset: written)
             
             // Suspend all connection until the saved data can be written
             for connectin in connections.values {
@@ -208,6 +216,7 @@ open class Tunnel: NSObject {
     
     // Send a Data message on the tunnel connection
     func sendData(_ data: Data, forConnection connectionIdentifier: Int) {
+        testVPNLog(self.TAG + "send a data message")
         let properties = createMessagePropertiesForConnection(connectionIdentifier, commandType: .data, extraProperties: [TunnelMessageKey.Data.rawValue: data as AnyObject])
         
         if !sendMessage(properties) {
@@ -217,6 +226,7 @@ open class Tunnel: NSObject {
     
     // Send a Data message with an associated endpoint
     func sendDataWithEndPoint(_ data: Data, forConnection connectionIdentifier: Int, host: String, port: Int){
+        testVPNLog(self.TAG + "send data with endpoint")
         let properties = createMessagePropertiesForConnection(connectionIdentifier, commandType: .data, extraProperties: [
             TunnelMessageKey.Data.rawValue: data as AnyObject,
             TunnelMessageKey.Host.rawValue: host as AnyObject,
@@ -230,6 +240,7 @@ open class Tunnel: NSObject {
     
     // Send a Suspend message on the tunnel connection
     func sendSuspendForConnection(_ connectionIdentifier: Int) {
+        testVPNLog(self.TAG + "send suspend for connection")
         let properties = createMessagePropertiesForConnection(connectionIdentifier, commandType: .suspend)
         if !sendMessage(properties){
             testVPNLog("<AINASSINE> testVPN Tunnel.swift: " + "Failed to send a suspend message for connection \(connectionIdentifier)")
@@ -238,6 +249,7 @@ open class Tunnel: NSObject {
     
     // Send a Resume message on the tunnel connection
     func sendResumeForConnection(_ connectionIdentifier: Int) {
+        testVPNLog(self.TAG + "send resume for connection")
         let properties = createMessagePropertiesForConnection(connectionIdentifier, commandType: .resume)
         if !sendMessage(properties){
             testVPNLog("<AINASSINE> testVPN Tunnel.swift: " + "Failed to send a resume message for connection \(connectionIdentifier)")
@@ -245,7 +257,8 @@ open class Tunnel: NSObject {
     }
     
     // Send a Close message on the tunnel connection
-    func sendCloseForConnection(_ type: TunnelConnectionCloseDirection, connectionIdentifier: Int) {
+    open func sendCloseType(_ type: TunnelConnectionCloseDirection, forConnection connectionIdentifier: Int) {
+        testVPNLog(self.TAG + "send close type")
         let properties = createMessagePropertiesForConnection(connectionIdentifier, commandType: .close, extraProperties: [TunnelMessageKey.CloseDirection.rawValue: type.rawValue as AnyObject])
         if !sendMessage(properties){
             testVPNLog("<AINASSINE> testVPN Tunnel.swift: " + "Failed to send a close message for connection \(connectionIdentifier)")
@@ -254,6 +267,7 @@ open class Tunnel: NSObject {
     
     // Send a Packets message on the tunnel connection
     func sendPackets(_ packets: [Data], protocols: [NSNumber], forConnection connectionIdentifier: Int) {
+        testVPNLog(self.TAG + "send packets")
         let properties = createMessagePropertiesForConnection(connectionIdentifier, commandType: .packets, extraProperties: [
             TunnelMessageKey.Packets.rawValue: packets as AnyObject,
             TunnelMessageKey.Protocols.rawValue: protocols as AnyObject
@@ -266,6 +280,7 @@ open class Tunnel: NSObject {
     
     // Process a message payload
     func handlePacket(_ packetData: Data) -> Bool {
+        testVPNLog(self.TAG + "handle packet, process a message payload.")
         let properties: [String: AnyObject]
         do {
             properties = try PropertyListSerialization.propertyList(from: packetData, options: PropertyListSerialization.MutabilityOptions(), format: nil) as! [String: AnyObject]
@@ -298,7 +313,7 @@ open class Tunnel: NSObject {
             guard let data = properties[TunnelMessageKey.Data.rawValue] as? Data else {break}
             /* check if the message has properties for host and port */
             if let host = properties[TunnelMessageKey.Host.rawValue] as? String, let port = properties[TunnelMessageKey.Port.rawValue] as? Int {
-                testVPNLog("<AINASSINE> testVPN Tunnel.swift: " + "Received data for connection \(connection?.identifier) from \(host):\(port)")
+                testVPNLog(self.TAG + "Received data for connection \(connection?.identifier) from \(host):\(port)")
                 /* UDP case: send peer's address along with data */
                 targetConnection.sendDataWithEndPoint(data, host: host, port: port)
             }
@@ -311,15 +326,13 @@ open class Tunnel: NSObject {
             targetConnection.resume()
         case .close:
             if let closeDirectionNumber = properties[TunnelMessageKey.CloseDirection.rawValue] as? Int, let closeDirection = TunnelConnectionCloseDirection(rawValue: closeDirectionNumber){
-                testVPNLog("<AINASSINE> testVPN Tunnel.swift: " + "\(connection?.identifier): closing \(closeDirection)")
                 targetConnection.closeConnection(closeDirection)
             }else{
-                testVPNLog("<AINASSINE> testVPN Tunnel.swift: " + "\(connection?.identifier): closing reads and writes")
                 targetConnection.closeConnection(.all)
             }
         case .packets:
             if let packets = properties[TunnelMessageKey.Packets.rawValue] as? [Data], let protocols = properties[TunnelMessageKey.Protocols.rawValue] as? [NSNumber], packets.count == protocols.count {
-                targetConnection.sendPackets(packets, protocol: protocols)
+                targetConnection.sendPackets(packets, protocols: protocols)
             }
         default:
             return handleMessage(commandType, properties: properties, connection: connection)
@@ -330,7 +343,7 @@ open class Tunnel: NSObject {
     
     // handle the received message
     func handleMessage(_ command: TunnelCommand, properties: [String: AnyObject], connection: Connection?) -> Bool {
-        testVPNLog("<AINASSINE> testVPN Tunnel.swift: " + "handleMessage called on abstract base class")
+        testVPNLog(self.TAG + "handle the received message. command: \(command), properties: \(properties) ")
         return false
     }
 }

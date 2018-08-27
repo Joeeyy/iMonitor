@@ -7,6 +7,8 @@
 //
 
 /*
+ Contorl Interface for testVPN, mainly for debug uitility for present time.
+ 
  1. 添加VPN配置
  2. 读取VPN配置
  3. 启动VPN配置
@@ -21,26 +23,34 @@ import NetworkExtension
 import testVPNServices
 
 class ViewController: UIViewController {
-    let TAG = "<AINASSINE> ViewController: "
+    let TAG = "ViewController: "
     
     // </ VPN related stuffs
+    // VPN managers, mainly consisted with packet tunnel provider manager
     var VPNManagers = [NEVPNManager]()
+    // a specific VPNManager
     var VPNManager: NEVPNManager = NEVPNManager.shared()
+    // a app proxy manager, mainly used for app proxy service
+    var proxyManager = NEAppProxyProviderManager()
     
+    // set default vpn configuration
     let VPNName = "simpleTunnelVPN2"
     let serverAddr = "192.168.43.137"
     let serverPort = "6668"
     // VPN related stuffs />
     
     // </ UIs for test utility
+    // console showing debug information
     @IBOutlet var debugConsole: UITextView!
     
+    // Load button at UI, load VPN configurations of testVPN app from iOS
     @IBAction func loadBtn(_ sender: Any) {
+        debugConsoleLog(log: "[ACTION!] Load Button is pressed, getting configurations as follows: \n")
         getVPNConfiguration()
-        debugConsoleLog( log: "[ACTION!] Load Button is pressed, getting configurations as follows: \n")
         var counter = 0
         var tmpserverName = ""
         var tmpserverAddr = ""
+        debugConsoleLog(log: "we have \(self.VPNManagers.count) vpn configurations in total")
         for manager in VPNManagers{
             counter = counter + 1
             tmpserverName = manager.localizedDescription!
@@ -50,13 +60,15 @@ class ViewController: UIViewController {
         }
     }
     
+    // Add button at UI, add a VPN configuraion to testVPN's shared preference
     @IBAction func addBtn(_ sender: Any) {
-        addVPNConfiguration()
         debugConsoleLog( log: "[ACTION!] Add Button is pressed, adding a configuration as follows: \n")
+        addVPNConfiguration()
         debugConsoleLog( log: "[VPN Name ] \(self.VPNName) \n")
         debugConsoleLog( log: "[VPN Server] \(self.serverAddr+":"+self.serverPort) \n")
     }
     
+    // Delete button at UI, delete a VPN configuration of testVPN's shared preference
     @IBAction func deleteBtn(_ sender: Any) {
         debugConsoleLog( log: "[ACTION!] Delete Button is pressed, deleting the last configuration as follows: \n")
         let numOfVPNs = VPNManagers.count
@@ -69,6 +81,7 @@ class ViewController: UIViewController {
         debugConsoleLog( log: "[VPN Server] \(String(describing: deleteVPNServer)) \n")
     }
     
+    // Enable button at UI, enable a VPN configuration of testVPN's shared preference
     @IBAction func enableBtn(_ sender: Any) {
         debugConsoleLog( log: "[ACTION!] Enable Button is pressed, enabling the first configuration as follows: \n")
         if VPNManagers.count != 0{
@@ -81,6 +94,7 @@ class ViewController: UIViewController {
         }
     }
     
+    // Start button at UI, start a VPN configuration
     @IBAction func startBtn(_ sender: Any) {
         debugConsoleLog( log: "[ACTION!] Start Button is pressed, starting the first configuration as follows: \n")
         if VPNManagers.count != 0{
@@ -93,6 +107,7 @@ class ViewController: UIViewController {
         }
     }
     
+    // Stop button at UI, stop a VPN configuration
     @IBAction func stopBtn(_ sender: Any) {
         debugConsoleLog( log: "[ACTION!] Stop Button is pressed, stopping the first configuration as follows: \n")
         if VPNManagers.count != 0{
@@ -103,6 +118,20 @@ class ViewController: UIViewController {
         else{
             debugConsoleLog( log: "[WARNING!] There's no vpn configuration, cannot stop anyone. \n")
         }
+    }
+    
+    // Load PA button at UI, load a per app proxy configuration
+    @IBAction func loadPABtn(_ sender: Any) {
+        debugConsoleLog(log: "[ACTION!] Load Per App proxy configurations.\n")
+        loadPerAPPVPNCP()
+        debugConsoleLog(log: "[ACTION!] Load Per App proxy configurations accomplished.\n")
+    }
+    
+    // start pa button at UI, start a per app proxy
+    @IBAction func startPABtn(_ sender: Any) {
+        debugConsoleLog(log: "Starting Per App proxy configuration.\n")
+        initProviderManager()
+        debugConsoleLog(log: "Starting Per App proxy configuration accomplished.\n")
     }
     // UIs for test utility />
 
@@ -122,6 +151,8 @@ class ViewController: UIViewController {
         // Dispose of any resources that can be recreated.
     }
 
+    // </ functions of actions
+    
     // Used to add VPN configuraion, still at the test phase
     func addVPNConfiguration(){
         // Make configuration
@@ -148,7 +179,6 @@ class ViewController: UIViewController {
                 return
             }
             self.VPNManagers = tmpVPNManagers
-            print(self.TAG+"we have \(self.VPNManagers.count) vpn configurations in total")
         }
         CFRunLoopRun()
     }
@@ -205,6 +235,58 @@ class ViewController: UIViewController {
             print("this vpn is not connected, cannot stop it.")
         }
     }
+    @IBAction func sendMessage(_ sender: Any) {
+        // Send a simple IPC message to the provider, handle the response.
+        debugConsoleLog(log: "[ACTION!] Going to send a \"hello\" message to provider.")
+        if let session = VPNManagers[0].connection as? NETunnelProviderSession,
+            let message = "Hello Provider".data(using: String.Encoding.utf8)
+            , VPNManagers[0].connection.status != .invalid
+        {
+            do {
+                try session.sendProviderMessage(message) { response in
+                    if response != nil {
+                        let responseString = NSString(data: response!, encoding: String.Encoding.utf8.rawValue)
+                        self.debugConsoleLog(log: "[ATTENTION!]Received response from the provider: \(String(describing: responseString))\n")
+                    } else {
+                        self.debugConsoleLog(log: "[ATTENTION!]Got a nil response from the provider\n")
+                    }
+                }
+            } catch {
+                debugConsoleLog(log: "[ATTENTION!]Failed to send a message to the provider\n")
+            }
+        }
+    }
+    
+    // Used to load per-app-vpn configuraion profile
+    private func loadPerAPPVPNCP(){ //load perAPP VPN configuration profile
+        NEAppProxyProviderManager.loadAllFromPreferences { (managers, error) in
+            assert(Thread.isMainThread)
+            if error != nil {
+                print("Load preferences error.")
+            } else {
+                guard (managers?.first) != nil else {
+                    print("Load no configuration.")
+                    return
+                }
+                print("Load preferences succeeded!")
+                self.proxyManager = (managers?.first)!
+            }
+        }
+    }
+    
+    // used to start per-app proxy
+    private func initProviderManager() {
+        let session = self.proxyManager.connection as! NETunnelProviderSession
+        do {
+            try session.startTunnel(options: nil)
+            print("session start succeeded!")
+        }
+        catch {
+            print("StatusViewController.swift")
+            print(error)
+        }
+    }
+    // functions of actions />
     
     func debugConsoleLog(log: String){
         debugConsole.text.append(log)
