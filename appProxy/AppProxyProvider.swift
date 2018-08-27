@@ -31,16 +31,16 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate {
     // begin the process of establishing the tunnel
     override func startProxy(options: [String : Any]? = nil, completionHandler: @escaping (Error?) -> Void) {
         // Add code here to start the process of connecting the tunnel.
-        testVPNLog(self.TAG + " starting PER_APP_PROXY tunnel")
+        testVPNLog(self.TAG + "starting PER_APP_PROXY tunnel")
         let newTunnel = ClientTunnel()
         newTunnel.delegate = self
         
         if let error = newTunnel.startTunnel(self) {
             completionHandler(error as NSError)
-            testVPNLog(self.TAG + " start new Tunnel failed.")
+            testVPNLog(self.TAG + "start new Tunnel failed.")
             return
         }
-        testVPNLog(self.TAG+" PER_APP_PROXY started successfully!")
+        testVPNLog(self.TAG+"PER_APP_PROXY started successfully!")
         pendingStartCompletion = completionHandler
         tunnel = newTunnel
     }
@@ -49,35 +49,35 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate {
     override func stopProxy(with reason: NEProviderStopReason, completionHandler: @escaping () -> Void) {
         // Add code here to start the process of stopping the tunnel.
         // Clear out any pending start completion handler.
-        testVPNLog(self.TAG + " Stopping PER_APP_VPN.")
+        testVPNLog(self.TAG + "Stopping PER_APP_VPN.")
         pendingStartCompletion = nil
         
         pendingStopCompletion = completionHandler
         tunnel?.closeTunnel()
-        testVPNLog(self.TAG + " PER_APP_VPN stopped.")
+        testVPNLog(self.TAG + "PER_APP_VPN stopped.")
     }
     
     // Handle a new flow of network data created by an application
     override func handleNewFlow(_ flow: NEAppProxyFlow) -> Bool {
         // Add code here to handle the incoming flow.
-        testVPNLog(self.TAG+" A new PER_APP_PROXY_FLOW comes, start handling it.")
+        testVPNLog(self.TAG+"A new PER_APP_PROXY_FLOW comes, start handling it.")
         var newConnection: ClientAppProxyConnection?
         
         guard let clientTunnel = tunnel else { return false }
         
         if let TCPFlow = flow as? NEAppProxyTCPFlow {
-            testVPNLog(self.TAG + " it's a TCP Flow, description: \(TCPFlow.description), from app: \(TCPFlow.metaData.sourceAppSigningIdentifier).")
+            testVPNLog(self.TAG + "it's a TCP Flow, description: \(TCPFlow.description), from app: \(TCPFlow.metaData.sourceAppSigningIdentifier).")
             newConnection = ClientAppProxyTCPConnection(tunnel: clientTunnel, newTCPFlow: TCPFlow)
         }
         else if let UDPFlow = flow as? NEAppProxyUDPFlow {
-            testVPNLog(self.TAG + " it's a UDP Flow, description: \(UDPFlow.description), from app: \(UDPFlow.metaData.sourceAppSigningIdentifier).")
+            testVPNLog(self.TAG + "it's a UDP Flow, description: \(UDPFlow.description), from app: \(UDPFlow.metaData.sourceAppSigningIdentifier).")
             newConnection = ClientAppProxyUDPConnection(tunnel: clientTunnel, newUDPFlow: UDPFlow)
         }
         
-        guard newConnection != nil else { testVPNLog(self.TAG + " new connection established failed."); return false }
+        guard newConnection != nil else { testVPNLog(self.TAG + "new connection established failed."); return false }
         
         newConnection!.open()
-        testVPNLog(self.TAG + " new connection established.")
+        testVPNLog(self.TAG + "new connection established.")
         
         return true
     }
@@ -91,7 +91,7 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate {
             pendingStartCompletion = nil
             return
         }
-        testVPNLog(self.TAG + " Tunnel opened, fetching configuration")
+        testVPNLog(self.TAG + "Tunnel opened, fetching configuration")
         clientTunnel.sendFetchConfiguation()
     }
     
@@ -111,13 +111,13 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate {
             // No completion handler, so cancel the proxy.
             cancelProxyWithError(tunnel?.lastError)
         }
-        testVPNLog(self.TAG + " Tunnel closed.")
+        testVPNLog(self.TAG + "Tunnel closed.")
         tunnel = nil
     }
     
     /// Handle the server sending a configuration.
     func tunnelDidSendConfiguration(_ targetTunnel: Tunnel, configuration: [String : AnyObject]) {
-        testVPNLog(self.TAG + " Server sent configuration: \(configuration)")
+        testVPNLog(self.TAG + "Server sent configuration: \(configuration)")
         
         guard let tunnelAddress = tunnel?.remoteHost else {
             let error = SimpleTunnelError.badConnection
@@ -139,7 +139,7 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate {
             newSettings.dnsSettings?.searchDomains = DNSSearchDomains
         }
         
-        testVPNLog(self.TAG + " Calling setTunnelNetworkSettings")
+        testVPNLog(self.TAG + "Calling setTunnelNetworkSettings")
         
         self.setTunnelNetworkSettings(newSettings) { error in
             if error != nil {

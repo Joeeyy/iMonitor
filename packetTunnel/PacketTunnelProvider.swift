@@ -34,13 +34,13 @@ class PacketTunnelProvider: NEPacketTunnelProvider, TunnelDelegate, ClientTunnel
     // Begin the process of establishing a tunnel.
     override func startTunnel(options: [String : NSObject]?, completionHandler: @escaping (Error?) -> Void) {
         // Add code here to start the process of connecting the tunnel.
-        testVPNLog(TAG+" starting VPN Tunnel.")
+        testVPNLog(TAG+"starting VPN Tunnel.")
         
         let newTunnel = ClientTunnel()
         newTunnel.delegate = self
         
         if let error = newTunnel.startTunnel(self){
-            testVPNLog(self.TAG + " start Tunnel error")
+            testVPNLog(self.TAG + "start Tunnel error")
             completionHandler(error as NSError)
         }
         else {

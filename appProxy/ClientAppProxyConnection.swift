@@ -26,7 +26,7 @@ class ClientAppProxyConnection : Connection {
     // MARK: Initializers
     
     init(tunnel: ClientTunnel, flow: NEAppProxyFlow) {
-        testVPNLog(self.TAG + " initializing a new ClientAppProxyConnection")
+        testVPNLog(self.TAG + "initializing a new ClientAppProxyConnection")
         appProxyFlow = flow
         super.init(connectionIdentifier: flow.hash, parentTunnel: tunnel)
     }
@@ -35,13 +35,13 @@ class ClientAppProxyConnection : Connection {
     
     /// Send an "Open" message to the SimpleTunnel server, to begin the process of establishing a flow of data in the SimpleTunnel protocol.
     func open() {
-        testVPNLog(self.TAG + " send an \"Open\" message to the SimpleTunnel server, to begin the process of establishing a flow of data in the SimpleTunnel protocol")
+        testVPNLog(self.TAG + "send an \"Open\" message to the SimpleTunnel server, to begin the process of establishing a flow of data in the SimpleTunnel protocol")
         open([:])
     }
     
     /// Send an "Open" message to the SimpleTunnel server, to begin the process of establishing a flow of data in the SimpleTunnel protocol.
     func open(_ extraProperties: [String: AnyObject]) {
-        testVPNLog(self.TAG + " send an \"Open\" message to the SimpleTunnel server, to begin the process of establishing a flow of data in the SimpleTunnel protocol")
+        testVPNLog(self.TAG + "send an \"Open\" message to the SimpleTunnel server, to begin the process of establishing a flow of data in the SimpleTunnel protocol")
         guard let clientTunnel = tunnel as? ClientTunnel else {
             // Close the NEAppProxyFlow.
             let error: SimpleTunnelError = .badConnection
@@ -64,7 +64,7 @@ class ClientAppProxyConnection : Connection {
     
     /// Handle the result of sending a data message to the SimpleTunnel server.
     func handleSendResult(_ error: NSError?) {
-        testVPNLog(self.TAG + " handling send result.")
+        testVPNLog(self.TAG + "handling send result.")
     }
     
     /// Handle errors that occur on the connection.
@@ -80,7 +80,7 @@ class ClientAppProxyConnection : Connection {
     
     /// Send a "Data" message to the SimpleTunnel server.
     func sendDataMessage(_ data: Data, extraProperties: [String: AnyObject] = [:]) {
-        testVPNLog(self.TAG +  " sending a data message to the server.")
+        testVPNLog(self.TAG +  "sending a data message to the server.")
         queue.async {
             
             guard let clientTunnel = self.tunnel as? ClientTunnel else { return }
@@ -108,9 +108,9 @@ class ClientAppProxyConnection : Connection {
     
     /// Handle the "Open Completed" message received from the SimpleTunnel server for this connection.
     override func handleOpenCompleted(_ resultCode: TunnelConnectionOpenResult, properties: [NSObject: AnyObject]) {
-        testVPNLog(self.TAG +  " handling open completed messaged received from the SimpleTunnel server")
+        testVPNLog(self.TAG +  "handling open completed messaged received from the SimpleTunnel server")
         guard resultCode == .success else {
-            testVPNLog(self.TAG + " Failed to open \(identifier), result = \(resultCode)")
+            testVPNLog(self.TAG + "Failed to open \(identifier), result = \(resultCode)")
             handleErrorCondition(.peerReset, notifyServer: false)
             return
         }
@@ -128,7 +128,7 @@ class ClientAppProxyConnection : Connection {
     }
     
     override func closeConnection(_ direction: TunnelConnectionCloseDirection) {
-        testVPNLog(self.TAG +  " closing connection")
+        testVPNLog(self.TAG +  "closing connection")
         self.closeConnection(direction, flowError: nil)
     }
     
@@ -249,7 +249,6 @@ class ClientAppProxyUDPConnection : ClientAppProxyConnection {
             TunnelMessageKey.TunnelType.rawValue: TunnelLayer.app.rawValue as AnyObject,
             TunnelMessageKey.AppProxyFlowType.rawValue: AppProxyFlowKind.udp.rawValue as AnyObject
             ])
-        testVPNLog(TAG+" " + TunnelMessageKey.Host.rawValue)
     }
     
     /// Handle the result of sending a "Data" message to the SimpleTunnel server.

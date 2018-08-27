@@ -91,7 +91,7 @@ open class ClientTunnel: Tunnel {
     
     /// Read a SimpleTunnel packet from the tunnel connection.
     func readNextPacket() {
-        testVPNLog(self.TAG + " reading next packet")
+        testVPNLog(self.TAG + "reading next packet")
         guard let targetConnection = connection else {
             closeTunnelWithError(SimpleTunnelError.badConnection as NSError)
             return
