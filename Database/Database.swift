@@ -179,7 +179,7 @@ struct Database {
     func tableAPPCONFIGCreate() {
         do {
             try db.run(TABLE_APPCONFIG.create { table in
-                table.column(TABLE_APPCONFIG_KEY)
+                table.column(TABLE_APPCONFIG_KEY, primaryKey: true)
                 table.column(TABLE_APPCONFIG_VALUE)
             })
             testVPNLog(self.TAG + "create table APPCONFIG successfully.")
@@ -196,7 +196,7 @@ struct Database {
         )
         do {
             try db.run(insert)
-            testVPNLog(self.TAG + "insert a record into table APPCONFIG succeeded.")
+            testVPNLog(self.TAG + "insert a record into table APPCONFIG succeeded. key: \(key), value: \(value)")
         } catch {
             testVPNLog(self.TAG + "insert a record into table APPCONFIG failed.")
         }
@@ -229,17 +229,19 @@ struct Database {
     }
     
     // get value of a record in APP CONFIG table by key name
-    func tableAPPCONFIGQueryItem(key: String) {
+    func tableAPPCONFIGQueryItem(key: String) -> String?{
         let filtered_table = TABLE_APPCONFIG.filter(TABLE_APPCONFIG_KEY == key)
         do {
             let records = try! db.prepare(filtered_table)
             testVPNLog(self.TAG + "\(records.underestimatedCount)")
             for record in records{
                 testVPNLog(self.TAG + "checked: key: \(key), value: \(record[TABLE_APPCONFIG_VALUE])")
+                return record[TABLE_APPCONFIG_VALUE]
             }
         } catch {
             testVPNLog(self.TAG + "error occured when querying record with key: \(key), error: \(error)")
         }
+        return nil
     }
     
     // ACTIONs />

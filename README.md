@@ -80,9 +80,12 @@ Answer:
         > 1. TCP flow的localEndpoint，UDP flow的remoteEndpoint
         > 2. flow 的协议确定
         > 3. 本机外网地址确定
+
 13. 2018-09-05
     > 通过http://192.168.43.137/test/checkin/checkin.php完成了信息提交和ip确定，应该考虑在日后的实现中定期上传信息，定期确认ip，但是如何调用函数，如何定期上传，如何确定系统全局ip变量仍待考虑。
     > packetTunnel似乎有每一个packet的协议。
+    > 利用completionHandler解决了http请求返回值的问题
+    > 完成向log中插入本机ip
 
 ## bundle id获取
 1. 关于获取手机上已经安装的app列表

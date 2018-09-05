@@ -320,9 +320,10 @@ public func postRequest(url: String, completion: @escaping ((AnyObject)->Void)){
         
         do {
             if let json = try JSONSerialization.jsonObject(with: data!, options: []) as? NSDictionary {
-                testVPNLog("Response: \(json)")
+                //testVPNLog("Response: \(json)")
                 //ret = ((NSString(data: data!, encoding: String.Encoding.utf8.rawValue)as?String)!)
-                completion((NSString(data: data!, encoding: String.Encoding.utf8.rawValue)as?String)! as AnyObject)
+                //completion((NSString(data: data!, encoding: String.Encoding.utf8.rawValue)as?String)! as AnyObject)
+                completion(data as AnyObject)
             } else {
                 let jsonStr = NSString(data: data!, encoding: String.Encoding.utf8.rawValue)// No error thrown, but not NSDictionary
                 testVPNLog("Error could not parse JSON: \(jsonStr)")

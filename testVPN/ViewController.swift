@@ -24,8 +24,6 @@ import testVPNServices
 class ViewController: UIViewController {
     let TAG = "ViewController: "
     
-    static var currentIP: String?
-    
     // Database:
     var database: Database!
     
@@ -161,8 +159,26 @@ class ViewController: UIViewController {
             testVPNLog(address)
         }*/
         postRequest(url: "http://192.168.43.137/test/checkin/checkin.php") { retStr in
-            testVPNLog(self.TAG + "\(retStr)")
+            do{
+                //if let json = try JSONSerialization.jsonObject(with: retStr.data, options: []) as? NSDictionary {
+                //    self.database.tableAPPCONFIGInsertItem(key: "ip", value: json.value(forKey: "ip") as! String)
+                //}
+                if let json = try JSONSerialization.jsonObject(with: retStr as! Data, options: []) as? NSDictionary {
+                    let lastIP = self.database.tableAPPCONFIGQueryItem(key: "ip")
+                    if lastIP == nil {
+                        self.database.tableAPPCONFIGInsertItem(key: "ip", value: json.value(forKey: "ip") as! String)
+                    }else if lastIP == json.value(forKey: "ip") as? String{
+                        // do nothing
+                    }else {
+                        self.database.tableAPPCONFIGUpdateItem(key: "ip", value: json.value(forKey: "ip") as! String)
+                    }
+                }
+            }
+            catch{
+                
+            }
         }
+        
     }
 
     override func didReceiveMemoryWarning() {

@@ -210,7 +210,9 @@ class ClientAppProxyTCPConnection : ClientAppProxyConnection {
             }
             self.sendDataMessage(readData)
             testVPNLog(self.TAG + "[Send Data To SERVER] time: \(getTime()), length: \(readData.count), from app: \(self.TCPFlow.metaData.sourceAppSigningIdentifier), to: \(self.TCPFlow.remoteEndpoint)")
-            self.database.tableNETWORKFLOWLOGInsertItem(srcIP: "localhost", srcPort: "localPort", dstIP: (self.TCPFlow.remoteEndpoint as! NWHostEndpoint).hostname, dstPort: (self.TCPFlow.remoteEndpoint as! NWHostEndpoint).port, length: readData.count, proto: "", time: getTime(), app: self.TCPFlow.metaData.sourceAppSigningIdentifier, direction: "out")
+            let currentIP = self.database.tableAPPCONFIGQueryItem(key: "ip")
+            testVPNLog(self.TAG + currentIP!)
+            self.database.tableNETWORKFLOWLOGInsertItem(srcIP: currentIP!, srcPort: "localPort", dstIP: (self.TCPFlow.remoteEndpoint as! NWHostEndpoint).hostname, dstPort: (self.TCPFlow.remoteEndpoint as! NWHostEndpoint).port, length: readData.count, proto: "", time: getTime(), app: self.TCPFlow.metaData.sourceAppSigningIdentifier, direction: "out")
             self.database.queryTableNETWORKFLOWLOG()
         }
     }
@@ -225,8 +227,9 @@ class ClientAppProxyTCPConnection : ClientAppProxyConnection {
                 self.TCPFlow.closeWriteWithError(nil)
             }
         }
+        let currentIP = self.database.tableAPPCONFIGQueryItem(key: "ip")
         testVPNLog(self.TAG + "[Send Back To APP] time: \(getTime()), length: \(data.count), to app: \(TCPFlow.metaData.sourceAppSigningIdentifier), from: \(TCPFlow.remoteEndpoint)")
-        self.database.tableNETWORKFLOWLOGInsertItem(srcIP: (self.TCPFlow.remoteEndpoint as! NWHostEndpoint).hostname, srcPort: (self.TCPFlow.remoteEndpoint as! NWHostEndpoint).port, dstIP: "localhost", dstPort: "localPort", length: data.count, proto: "", time: getTime(), app: self.TCPFlow.metaData.sourceAppSigningIdentifier, direction: "in")
+        self.database.tableNETWORKFLOWLOGInsertItem(srcIP: (self.TCPFlow.remoteEndpoint as! NWHostEndpoint).hostname, srcPort: (self.TCPFlow.remoteEndpoint as! NWHostEndpoint).port, dstIP: currentIP!, dstPort: "localPort", length: data.count, proto: "", time: getTime(), app: self.TCPFlow.metaData.sourceAppSigningIdentifier, direction: "in")
         self.database.queryTableNETWORKFLOWLOG()
     }
 }
