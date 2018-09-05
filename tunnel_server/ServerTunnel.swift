@@ -11,6 +11,7 @@ import SystemConfiguration
 
 /// The server-side implementation of the SimpleTunnel protocol.
 class ServerTunnel: Tunnel, TunnelDelegate, StreamDelegate {
+    private let TAG = "ServerTunnel: "
     
     // MARK: Properties
     
@@ -35,22 +36,17 @@ class ServerTunnel: Tunnel, TunnelDelegate, StreamDelegate {
     // MARK: Initializers
     
     init(newReadStream: InputStream, newWriteStream: OutputStream) {
+        testVPNLog(self.TAG + "server tunnel is initializing.")
         super.init()
         delegate = self
         
-        testVPNLog("new connection")
-        
         for stream in [newReadStream, newWriteStream] {
-            testVPNLog("hhhh")
             stream.delegate = self
             stream.open()
             stream.schedule(in: RunLoop.main, forMode: RunLoopMode.defaultRunLoopMode)
         }
-        testVPNLog("1")
         readStream = newReadStream
-        testVPNLog("2")
         writeStream = newWriteStream
-        testVPNLog("3")
     }
     
     // MARK: Class Methods
@@ -58,8 +54,6 @@ class ServerTunnel: Tunnel, TunnelDelegate, StreamDelegate {
     /// Start the network service.
     class func startListeningOnPort(port: Int32) -> NetService {
         let service = NetService(domain:Tunnel.serviceDomain, type:Tunnel.serviceType, name: "", port: port)
-        
-        testVPNLog("Starting network service on port \(port)")
         
         service.delegate = ServerTunnel.serviceDelegate
         service.publish(options: NetService.Options.listenForConnections)
@@ -77,6 +71,7 @@ class ServerTunnel: Tunnel, TunnelDelegate, StreamDelegate {
     
     /// Handle a bytes available event on the read stream.
     func handleBytesAvailable() -> Bool {
+        testVPNLog(self.TAG + "handle bytes available on the read stream")
         
         guard let stream = readStream else { return false }
         var readBuffer = [UInt8](repeating: 0, count: Tunnel.maximumMessageSize)
@@ -144,6 +139,7 @@ class ServerTunnel: Tunnel, TunnelDelegate, StreamDelegate {
     
     /// Handle a "Connection Open" message received from the client.
     func handleConnectionOpen(properties: [String: AnyObject]) {
+        testVPNLog(self.TAG + "handling connection open message received from the client")
         guard let connectionIdentifier = properties[TunnelMessageKey.Identifier.rawValue] as? Int,
             let tunnelLayerNumber = properties[TunnelMessageKey.TunnelType.rawValue] as? Int,
             let tunnelLayer = TunnelLayer(rawValue: tunnelLayerNumber)
@@ -151,14 +147,14 @@ class ServerTunnel: Tunnel, TunnelDelegate, StreamDelegate {
         
         switch tunnelLayer {
         case .app:
-            
+            testVPNLog(self.TAG + "app layer")
             guard let flowKindNumber = properties[TunnelMessageKey.AppProxyFlowType.rawValue] as? Int,
                 let flowKind = AppProxyFlowKind(rawValue: flowKindNumber)
                 else { break }
             
             switch flowKind {
             case .tcp:
-                testVPNLog("EMMMMMM")
+                testVPNLog(self.TAG + "TCP flow")
                 guard let host = properties[TunnelMessageKey.Host.rawValue] as? String,
                     let port = properties[TunnelMessageKey.Port.rawValue] as? NSNumber
                     else { break }
@@ -169,11 +165,13 @@ class ServerTunnel: Tunnel, TunnelDelegate, StreamDelegate {
                 }
                 
             case .udp:
+                testVPNLog(self.TAG + "UDP flow")
                 let _ = UDPServerConnection(connectionIdentifier: connectionIdentifier, parentTunnel: self)
                 sendOpenResultForConnection(connectionIdentifier: connectionIdentifier, resultCode: .success)
             }
             
         case .ip:
+            testVPNLog(self.TAG + "ip layer")
             let newConnection = ServerTunnelConnection(connectionIdentifier: connectionIdentifier, parentTunnel: self)
             guard newConnection.open() else {
                 newConnection.closeConnection(.all)
@@ -280,11 +278,14 @@ class ServerTunnel: Tunnel, TunnelDelegate, StreamDelegate {
     
     /// Handle a message received from the client.
     override func handleMessage(_ commandType: TunnelCommand, properties: [String: AnyObject], connection: Connection?) -> Bool {
+        testVPNLog(self.TAG + "handling a message received from the client")
         switch commandType {
         case .open:
+            testVPNLog(self.TAG + "the message asks to open tunnel")
             handleConnectionOpen(properties: properties)
             
         case .fetchConfiguration:
+            testVPNLog(self.TAG + "the message asks for a configuration")
             var personalized = ServerTunnel.configuration.configuration
             personalized.removeValue(forKey: SettingsKey.IPv4.rawValue)
             let messageProperties = createMessagePropertiesForConnection(0, commandType: .fetchConfiguration, extraProperties: [TunnelMessageKey.Configuration.rawValue: personalized as AnyObject])
@@ -298,6 +299,7 @@ class ServerTunnel: Tunnel, TunnelDelegate, StreamDelegate {
     
     /// Write data to the tunnel connection.
     override func writeDataToTunnel(_ data: Data, startingAtOffset: Int) -> Int {
+        testVPNLog(self.TAG + "writing data to tunnel")
         guard let stream = writeStream else { return -1 }
         return writeData(data as Data, toStream: stream, startingAtOffset:startingAtOffset)
     }

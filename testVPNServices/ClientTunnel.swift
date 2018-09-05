@@ -100,7 +100,7 @@ open class ClientTunnel: Tunnel {
         // First, read the total length of the packet.
         targetConnection.readMinimumLength(MemoryLayout<UInt32>.size, maximumLength: MemoryLayout<UInt32>.size) { data, error in
             if let readError = error {
-                testVPNLog("Got an error on the tunnel connection: \(readError)")
+                testVPNLog(self.TAG + "Got an error on the tunnel connection: \(readError)")
                 self.closeTunnelWithError(readError as NSError?)
                 return
             }
@@ -133,10 +133,6 @@ open class ClientTunnel: Tunnel {
                 }
                 
                 let payloadData = data
-                // this var is for debug, should be removed when publish this app
-                var tmpMutableData = NSMutableData()
-                tmpMutableData.append(payloadData!)
-                testVPNLog(self.TAG + "read payload data: length: \(payloadData?.count), content: \(tmpMutableData)")
                 
                 guard payloadData!.count == Int(totalLength) else {
                     testVPNLog("Payload data length (\(payloadData!.count)) != payload length (\(totalLength)")
@@ -173,7 +169,7 @@ open class ClientTunnel: Tunnel {
             return
         }
         
-        testVPNLog("Tunnel connection state changed to \(connection!.state)")
+        testVPNLog(self.TAG + "Tunnel connection state changed to \(connection!.state)")
         
         switch connection!.state {
         case .connected:

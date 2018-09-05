@@ -92,7 +92,7 @@ open class Tunnel: NSObject {
     var connections = [Int: Connection]()
     
     // The lists of data that needs to be written to the tunnel when possible
-    var savedData = SavedData()
+    let savedData = SavedData()
     
     // The SimpleTunnel Boujour service type
     class var serviceType: String { return "_tunnelserver._tcp" }
@@ -101,7 +101,7 @@ open class Tunnel: NSObject {
     class var serviceDomain: String { return "local" }
     
     // The maximum SimpleTunnel message size
-    class var maximumMessageSize: Int {return 128*1024 }
+    class var maximumMessageSize: Int {return 128 * 1024 }
     
     // The maximum size of a single tunneled IP packet.
     class var packetSize: Int { return 8192 }
@@ -113,6 +113,14 @@ open class Tunnel: NSObject {
     static var allTunnels = [Tunnel]()
     
     // MARK: Initializers
+    
+    override public init() {
+        testVPNLog(self.TAG + "initializing tunnel")
+        super.init()
+        Tunnel.allTunnels.append(self)
+    }
+    
+    // MARK: Interface
     
     // Close the tunnel
     func closeTunnel(){
@@ -134,6 +142,14 @@ open class Tunnel: NSObject {
     func addConnection(_ connection: Connection){
         testVPNLog(self.TAG + "adding connection")
         connections[connection.identifier] = connection
+        var counter = 0
+        for t in Tunnel.allTunnels{
+            testVPNLog(self.TAG + "Tunnel: \(counter)")
+            counter += 1
+            for c in t.connections{
+                testVPNLog(self.TAG + "connection: \(c.value.identifier)")
+            }
+        }
     }
     
     // Remove a connection from the set
@@ -186,7 +202,7 @@ open class Tunnel: NSObject {
     
     // Send a message on the tunnel connection
     func sendMessage(_ messageProperties: [String: AnyObject]) -> Bool{
-        testVPNLog(self.TAG + "send message")
+        testVPNLog(self.TAG + "send message: \(messageProperties)")
         var written: Int = 0
         
         guard let messageData = serializeMessage(messageProperties) else{
@@ -216,7 +232,7 @@ open class Tunnel: NSObject {
     
     // Send a Data message on the tunnel connection
     func sendData(_ data: Data, forConnection connectionIdentifier: Int) {
-        testVPNLog(self.TAG + "send a data message")
+        testVPNLog(self.TAG + "send a data message on connection \(connectionIdentifier)")
         let properties = createMessagePropertiesForConnection(connectionIdentifier, commandType: .data, extraProperties: [TunnelMessageKey.Data.rawValue: data as AnyObject])
         
         if !sendMessage(properties) {
@@ -280,10 +296,14 @@ open class Tunnel: NSObject {
     
     // Process a message payload
     func handlePacket(_ packetData: Data) -> Bool {
-        testVPNLog(self.TAG + "handle packet, process a message payload.")
+        // this is for debug, should be deleted when publishing
+        let tmpMutableData = NSMutableData()
+        tmpMutableData.append(packetData)
+        testVPNLog(self.TAG + "handle packet, process a message payload. content(\(tmpMutableData.length)): \(tmpMutableData)")
         let properties: [String: AnyObject]
         do {
             properties = try PropertyListSerialization.propertyList(from: packetData, options: PropertyListSerialization.MutabilityOptions(), format: nil) as! [String: AnyObject]
+            testVPNLog(self.TAG + "properties received: \(properties)")
         }
         catch {
             testVPNLog("<AINASSINE> testVPN Tunnel.swift: " + "Failed to create the message properties from the packet")
@@ -318,6 +338,7 @@ open class Tunnel: NSObject {
                 targetConnection.sendDataWithEndPoint(data, host: host, port: port)
             }
             else{
+                testVPNLog(self.TAG + "no host specified, sending data on connection \(targetConnection.identifier)")
                 targetConnection.sendData(data)
             }
         case .suspend:

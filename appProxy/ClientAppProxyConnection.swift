@@ -10,10 +10,14 @@ import Foundation
 import testVPNServices
 import NetworkExtension
 
+
 /// An object representing the client side of a logical flow of network data in the SimpleTunnel tunneling protocol.
 class ClientAppProxyConnection : Connection {
     
     // MARK: Properties
+    
+    // Database
+    var database: Database!
     
     /// The NEAppProxyFlow object corresponding to this connection.
     let appProxyFlow: NEAppProxyFlow
@@ -28,6 +32,7 @@ class ClientAppProxyConnection : Connection {
     init(tunnel: ClientTunnel, flow: NEAppProxyFlow) {
         testVPNLog(self.TAG + "initializing a new ClientAppProxyConnection")
         appProxyFlow = flow
+        database = Database()
         super.init(connectionIdentifier: flow.hash, parentTunnel: tunnel)
     }
     
@@ -157,7 +162,6 @@ class ClientAppProxyTCPConnection : ClientAppProxyConnection {
     
     /// The NEAppProxyTCPFlow object corresponding to this connection
     var TCPFlow: NEAppProxyTCPFlow {
-        testVPNLog(self.TAG + "new TCP FLOW")
         return (appProxyFlow as! NEAppProxyTCPFlow)
     }
     
@@ -165,6 +169,7 @@ class ClientAppProxyTCPConnection : ClientAppProxyConnection {
     
     init(tunnel: ClientTunnel, newTCPFlow: NEAppProxyTCPFlow) {
         super.init(tunnel: tunnel, flow: newTCPFlow)
+        testVPNLog(self.TAG + "clientAppProxyTCPConnection: \(self.identifier), and its TCPFlow: \(self.TCPFlow.description)")
     }
     
     // MARK: ClientAppProxyConnection
@@ -203,8 +208,10 @@ class ClientAppProxyTCPConnection : ClientAppProxyConnection {
                 self.TCPFlow.closeReadWithError(nil)
                 return
             }
-            
             self.sendDataMessage(readData)
+            testVPNLog(self.TAG + "[Send Data To SERVER] time: \(getTime()), length: \(readData.count), from app: \(self.TCPFlow.metaData.sourceAppSigningIdentifier), to: \(self.TCPFlow.remoteEndpoint)")
+            self.database.tableNETWORKFLOWLOGInsertItem(srcIP: "localhost", srcPort: "localPort", dstIP: (self.TCPFlow.remoteEndpoint as! NWHostEndpoint).hostname, dstPort: (self.TCPFlow.remoteEndpoint as! NWHostEndpoint).port, length: readData.count, proto: "", time: getTime(), app: self.TCPFlow.metaData.sourceAppSigningIdentifier, direction: "out")
+            self.database.queryTableNETWORKFLOWLOG()
         }
     }
     
@@ -218,6 +225,9 @@ class ClientAppProxyTCPConnection : ClientAppProxyConnection {
                 self.TCPFlow.closeWriteWithError(nil)
             }
         }
+        testVPNLog(self.TAG + "[Send Back To APP] time: \(getTime()), length: \(data.count), to app: \(TCPFlow.metaData.sourceAppSigningIdentifier), from: \(TCPFlow.remoteEndpoint)")
+        self.database.tableNETWORKFLOWLOGInsertItem(srcIP: (self.TCPFlow.remoteEndpoint as! NWHostEndpoint).hostname, srcPort: (self.TCPFlow.remoteEndpoint as! NWHostEndpoint).port, dstIP: "localhost", dstPort: "localPort", length: data.count, proto: "", time: getTime(), app: self.TCPFlow.metaData.sourceAppSigningIdentifier, direction: "in")
+        self.database.queryTableNETWORKFLOWLOG()
     }
 }
 

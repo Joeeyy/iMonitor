@@ -22,7 +22,7 @@
 		<key>testVPNServices.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>4</integer>
+			<integer>5</integer>
 		</dict>
 		<key>tunnel_server.xcscheme</key>
 		<dict>
@@ -32,6 +32,26 @@
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
+		<key>5E24CB552134F89900E909D5</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>5E4409C3212BE35000778393</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>5E440A64212D94BF00778393</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>5E440A74212D94DB00778393</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
 		<key>5EBD87B021312BF300918CC9</key>
 		<dict>
 			<key>primary</key>

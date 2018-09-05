@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="14135" systemVersion="17G65" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="DataFlowLog" representedClassName="DataFlowLog" syncable="YES" codeGenerationType="class">
+        <attribute name="dst_ip" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="dst_port" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="from_app" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="id" optional="YES" attributeType="Decimal" defaultValueString="0.0" syncable="YES"/>
+        <attribute name="length" optional="YES" attributeType="Decimal" defaultValueString="0.0" syncable="YES"/>
+        <attribute name="proto" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="src_ip" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="src_port" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="time" optional="YES" attributeType="String" syncable="YES"/>
+    </entity>
+    <elements>
+        <element name="DataFlowLog" positionX="-63" positionY="-18" width="128" height="180"/>
+    </elements>
+</model>

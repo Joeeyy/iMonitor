@@ -247,8 +247,101 @@ func rangeByMovingStartOfRange(_ range: Range<Int>, byCount: Int) -> CountableRa
     return (range.lowerBound + byCount)..<range.upperBound
 }
 
+// get time
+public func getTime() -> String{
+    var ret_time: String
+    let date = Date()
+    let timeFormatter = DateFormatter()
+    timeFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSSSSS"
+    ret_time = timeFormatter.string(from: date)
+    
+    return ret_time
+}
+
+// get local ip
+public func getIFAddresses() -> [String] {
+    var addresses = [String]()
+    
+    // Get list of all interfaces on the local machine:
+    var ifaddr : UnsafeMutablePointer<ifaddrs>?
+    guard getifaddrs(&ifaddr) == 0 else { return [] }
+    guard let firstAddr = ifaddr else { return [] }
+    
+    // For each interface ...
+    for ptr in sequence(first: firstAddr, next: { $0.pointee.ifa_next }) {
+        let flags = Int32(ptr.pointee.ifa_flags)
+        let addr = ptr.pointee.ifa_addr.pointee
+        
+        // Check for running IPv4, IPv6 interfaces. Skip the loopback interface.
+        if (flags & (IFF_UP|IFF_RUNNING|IFF_LOOPBACK)) == (IFF_UP|IFF_RUNNING) {
+            //if addr.sa_family == UInt8(AF_INET) || addr.sa_family == UInt8(AF_INET6) {
+            if addr.sa_family == UInt8(AF_INET){
+                // Convert interface address to a human readable string:
+                var hostname = [CChar](repeating: 0, count: Int(NI_MAXHOST))
+                if (getnameinfo(ptr.pointee.ifa_addr, socklen_t(addr.sa_len), &hostname, socklen_t(hostname.count),
+                                nil, socklen_t(0), NI_NUMERICHOST) == 0) {
+                    let address = String(cString: hostname)
+                    addresses.append(address)
+                    //testVPNLog("ifa_name: \(String(cString: ptr.pointee.ifa_name)), ifa_addr: \(address) ifa_flag: \(ptr.pointee.ifa_flags)")
+                }
+            }
+        }
+    }
+    
+    freeifaddrs(ifaddr)
+    return addresses
+}
+
+// make post
+public func postRequest(url: String) -> String? {
+    var ret = ""
+    let sessionConfig = URLSessionConfiguration.default
+    sessionConfig.timeoutIntervalForRequest = 5.0
+    sessionConfig.timeoutIntervalForResource = 5.0
+    let session : URLSession = URLSession(configuration: sessionConfig)
+    let url : NSURL = NSURL(string: url)!
+    let params: NSMutableDictionary = NSMutableDictionary()
+    params["imei"] = "1234567890x"
+    var jsonData:NSData? = nil
+    do {
+        jsonData  = try JSONSerialization.data(withJSONObject: params, options:JSONSerialization.WritingOptions.prettyPrinted) as NSData
+    } catch {
+    }
+    let request: NSMutableURLRequest = NSMutableURLRequest(url : url as URL)
+    request.httpMethod = "POST"
+    request.httpBody = jsonData! as Data
+    let dataTask: URLSessionDataTask = session.dataTask(with: request as URLRequest) { (data, response, error) in
+        guard data != nil else {
+            testVPNLog("Make post has no response.")
+            return
+        }
+        
+        testVPNLog((NSString(data: data!, encoding: String.Encoding.utf8.rawValue)as?String)!)
+        
+        do {
+            if let json = try JSONSerialization.jsonObject(with: data!, options: []) as? NSDictionary {
+                testVPNLog("Response: \(json)")
+            } else {
+                let jsonStr = NSString(data: data!, encoding: String.Encoding.utf8.rawValue)// No error thrown, but not NSDictionary
+                testVPNLog("Error could not parse JSON: \(jsonStr)")
+                //self.errorResponse(jsonStr!)
+            }
+        } catch let parseError {
+            testVPNLog(parseError as! String)// Log the error thrown by `JSONObjectWithData`
+            let jsonStr = NSString(data: data!, encoding: String.Encoding.utf8.rawValue)
+            testVPNLog("Error could not parse JSON: '\(jsonStr)'")
+            //self.errorResponse(jsonStr!)
+        }
+        ret = (NSString(data:data! ,encoding: String.Encoding.utf8.rawValue)as?String)!
+    }
+    dataTask.resume()
+    return ret
+}
 
 public func testVPNLog(_ message: String){
     NSLog("<AINASSINE> "+message)
 }
 
+public func simpleTunnelLog(_ message: String) {
+    NSLog("<ainassine> " + message)
+}

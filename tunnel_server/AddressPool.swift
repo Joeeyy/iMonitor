@@ -4,6 +4,7 @@
  
  Abstract:
  This file contains the AddressPool class. The AddressPool class is used to manage a pool of IP addresses.
+ AddressPool 类，用于管理IP地址池。
  */
 
 import Foundation
@@ -12,6 +13,7 @@ import Foundation
 class AddressPool {
     
     // MARK: Properties
+    private let TAG = "AddressPool: "
     
     /// The start address of the pool.
     let baseAddress: SocketAddress
@@ -28,6 +30,7 @@ class AddressPool {
     // MARK: Initializers
     
     init(startAddress: String, endAddress: String) {
+        testVPNLog(self.TAG + "initializing AddressPool, startAddress: \(startAddress), endAddress: \(endAddress)")
         baseAddress = SocketAddress()
         inUseMask = [Bool](repeating: false, count: 0)
         queue = DispatchQueue(label: "AddressPoolQueue")
@@ -43,17 +46,17 @@ class AddressPool {
             else { return }
         
         guard start.sin.sin_family == sa_family_t(AF_INET) else {
-            testVPNLog("IPv6 is not currently supported")
+            testVPNLog(self.TAG + "IPv6 is not currently supported")
             return
         }
         guard (start.sin.sin_addr.s_addr & 0xffff) == (end.sin.sin_addr.s_addr & 0xffff) else {
-            testVPNLog("start address (\(startAddress)) is not in the same class B network as end address (\(endAddress)) ")
+            testVPNLog(self.TAG + "start address (\(startAddress)) is not in the same class B network as end address (\(endAddress)) ")
             return
         }
         
         let difference = end.difference(start)
         guard difference >= 0 else {
-            testVPNLog("start address (\(startAddress)) is greater than end address (\(endAddress))")
+            testVPNLog(self.TAG + "start address (\(startAddress)) is greater than end address (\(endAddress))")
             return
         }
         
@@ -64,7 +67,7 @@ class AddressPool {
     
     /// Allocate an address from the pool.
     func allocateAddress() -> String? {
-        testVPNLog("TRY TO ALLOCATE IP ADDRESS")
+        testVPNLog(self.TAG + "TRY TO ALLOCATE IP ADDRESS")
         var result: String?
         
         queue.sync() {
@@ -81,12 +84,13 @@ class AddressPool {
             }
         }
         
-        testVPNLog("Allocated address \(result)")
+        testVPNLog(self.TAG + "Allocated address \(result)")
         return result
     }
     
     /// Deallocate an address in the pool.
     func deallocateAddress(addrString: String) {
+        testVPNLog(self.TAG + "TRY TO DEALLOCATE IP ADDRESS \(addrString)")
         queue.sync() {
             let address = SocketAddress()
             
@@ -95,6 +99,7 @@ class AddressPool {
             let difference = address.difference(self.baseAddress)
             if difference >= 0 && difference < Int64(self.inUseMask.count) {
                 self.inUseMask[Int(difference)] = false
+                testVPNLog(self.TAG + "Deallocate IP Address: \(addrString) finished.")
             }
         }
     }

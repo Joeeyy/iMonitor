@@ -18,12 +18,16 @@
  */
 
 import UIKit
-
 import NetworkExtension
 import testVPNServices
 
 class ViewController: UIViewController {
     let TAG = "ViewController: "
+    
+    static var currentIP: String?
+    
+    // Database:
+    var database: Database!
     
     // </ VPN related stuffs
     // VPN managers, mainly consisted with packet tunnel provider manager
@@ -144,6 +148,18 @@ class ViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super .viewWillAppear(animated)
+        
+        // create database
+        database = Database()
+        database.tableNETWORKFLOWLOGCreate()
+        
+        // check ip address
+        /*var addresses = [String]()
+        addresses = getIFAddresses()
+        for address in addresses{
+            testVPNLog(address)
+        }*/
+        postRequest(url: "http://192.168.43.137/test/checkin/checkin.php")
     }
 
     override func didReceiveMemoryWarning() {

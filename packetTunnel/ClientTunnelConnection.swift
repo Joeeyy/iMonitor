@@ -87,10 +87,10 @@ class ClientTunnelConnection: Connection {
     
     // Make the initial readPacketsWithCompletionHandler call
     func startHandlingPackets(){
-        testVPNLog(self.TAG + "start handling packets")
+        testVPNLog(self.TAG + "Make the initial readPacketsWithCompletionHandler call")
+        
         packetFlow.readPackets { inPackets, inProtocols in
             self.handlePackets(inPackets, protocols: inProtocols)
-            
         }
     }
     

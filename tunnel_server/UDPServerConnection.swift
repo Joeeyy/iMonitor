@@ -13,6 +13,7 @@ import Darwin
 class UDPServerConnection: Connection {
     
     // MARK: Properties
+    private let TAG = "UDPServerConnection: "
     
     /// The address family of the UDP socket.
     var addressFamily: Int32 = AF_UNSPEC
@@ -23,6 +24,7 @@ class UDPServerConnection: Connection {
     // MARK: Initializers
     
     override init(connectionIdentifier: Int, parentTunnel: Tunnel) {
+        testVPNLog(self.TAG + "initializing UDP Server Connection")
         super.init(connectionIdentifier: connectionIdentifier, parentTunnel: parentTunnel)
     }
     
@@ -36,6 +38,7 @@ class UDPServerConnection: Connection {
     
     /// Convert a sockaddr structure into an IP address string and port.
     func getEndpointFromSocketAddress(socketAddressPointer: UnsafePointer<sockaddr>) -> (host: String, port: Int)? {
+        testVPNLog(self.TAG + "getEndpointFromSocketAddress, convert a sockaddr structure into an IP address string and port")
         let socketAddress = UnsafePointer<sockaddr>(socketAddressPointer).pointee
         
         switch Int32(socketAddress.sa_family) {
@@ -68,6 +71,7 @@ class UDPServerConnection: Connection {
     
     /// Create a UDP socket
     func createSocketWithAddressFamilyFromAddress(address: String) -> Bool {
+        testVPNLog(self.TAG + "creating a UDP socket")
         var sin = sockaddr_in()
         var sin6 = sockaddr_in6()
         var newSocket: Int32 = -1
@@ -132,7 +136,7 @@ class UDPServerConnection: Connection {
                     self.getEndpointFromSocketAddress(socketAddressPointer: $0)
                 })
             }) else {
-                //            guard let endpoint = withUnsafePointer(to: &socketAddress, { self.getEndpointFromSocketAddress(socketAddressPointer: UnsafePointer($0)) }) else {
+                //guard let endpoint = withUnsafePointer(to: &socketAddress, { self.getEndpointFromSocketAddress(socketAddressPointer: UnsafePointer($0)) }) else {
                 testVPNLog("Failed to get the address and port from the socket address received from recvfrom")
                 self.closeConnection(.all)
                 return
@@ -151,6 +155,9 @@ class UDPServerConnection: Connection {
     
     /// Send a datagram to a given host and port.
     override func sendDataWithEndPoint(_ data: Data, host: String, port: Int) {
+        let tmpMutableData = NSMutableData()
+        tmpMutableData.append(data)
+        testVPNLog(self.TAG + "Send a datagram to the given host and port. destination:\(host):\(port), content: \(tmpMutableData)")
         
         if responseSource == nil {
             guard createSocketWithAddressFamilyFromAddress(address: host) else {
@@ -212,6 +219,7 @@ class UDPServerConnection: Connection {
     
     /// Close the connection.
     override func closeConnection(_ direction: TunnelConnectionCloseDirection) {
+        testVPNLog(self.TAG + "closing connection")
         super.closeConnection(direction)
         
         if let source = responseSource, isClosedForWrite && isClosedForRead {

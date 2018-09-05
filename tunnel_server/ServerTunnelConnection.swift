@@ -13,6 +13,7 @@ import Darwin
 class ServerTunnelConnection: Connection {
     
     // MARK: Properties
+    private let TAG = "ServerTunnelConnection: "
     
     /// The virtual address of the tunnel.
     var tunnelAddress: String?
@@ -30,6 +31,7 @@ class ServerTunnelConnection: Connection {
     
     /// Send an "open result" message with optionally the tunnel settings.
     func sendOpenResult(result: TunnelConnectionOpenResult, extraProperties: [String: AnyObject] = [:]) {
+        testVPNLog(self.TAG + "sending open result to client")
         guard let serverTunnel = tunnel else { return }
         
         var resultProperties = extraProperties
@@ -42,17 +44,18 @@ class ServerTunnelConnection: Connection {
     
     /// "Open" the connection by setting up the UTUN interface.
     func open() -> Bool {
+        testVPNLog(self.TAG + "open the connection by setting up the UTUN interface")
         
         // Allocate the tunnel virtual address.
         guard let address = ServerTunnel.configuration.addressPool?.allocateAddress() else {
-            testVPNLog("Failed to allocate a tunnel address")
+            testVPNLog(self.TAG + "Failed to allocate a tunnel address")
             sendOpenResult(result: .refused)
             return false
         }
         
         // Create the virtual interface and assign the address.
         guard setupVirtualInterface(address: address) else {
-            testVPNLog("Failed to set up the virtual interface")
+            testVPNLog(self.TAG + "Failed to set up the virtual interface")
             ServerTunnel.configuration.addressPool?.deallocateAddress(addrString: address)
             sendOpenResult(result: .internalError)
             return false
@@ -65,7 +68,7 @@ class ServerTunnelConnection: Connection {
         // Create a copy of the configuration, so that it can be personalized with the tunnel virtual interface.
         var personalized = ServerTunnel.configuration.configuration
         guard let IPv4Dictionary = personalized[SettingsKey.IPv4.rawValue] as? [AnyHashable: Any] else {
-            testVPNLog("No IPv4 Settings available")
+            testVPNLog(self.TAG + "No IPv4 Settings available")
             sendOpenResult(result: .internalError)
             return false
         }
@@ -85,7 +88,7 @@ class ServerTunnelConnection: Connection {
     
     /// Create a UTUN interface.
     func createTUNInterface() -> Int32 {
-        
+        testVPNLog(self.TAG + "create a UTUN interface")
         let utunSocket = socket(PF_SYSTEM, SOCK_DGRAM, SYSPROTO_CONTROL)
         guard utunSocket >= 0 else {
             testVPNLog("Failed to open a kernel control socket")
@@ -120,6 +123,7 @@ class ServerTunnelConnection: Connection {
     
     /// Get the name of a UTUN interface the associated socket.
     func getTUNInterfaceName(utunSocket: Int32) -> String? {
+        testVPNLog(self.TAG + "getting TUN interface name")
         var buffer = [Int8](repeating: 0, count: Int(IFNAMSIZ))
         var bufferSize: socklen_t = socklen_t(buffer.count)
         let resultCode = getsockopt(utunSocket, SYSPROTO_CONTROL, getUTUNNameOption(), &buffer, &bufferSize)
@@ -133,6 +137,7 @@ class ServerTunnelConnection: Connection {
     
     /// Set up the UTUN interface, start reading packets.
     func setupVirtualInterface(address: String) -> Bool {
+        testVPNLog(self.TAG + "set up the UTUN interface, start reading packets.")
         let utunSocket = createTUNInterface()
         guard let interfaceName = getTUNInterfaceName(utunSocket: utunSocket), utunSocket >= 0 &&
             setUTUNAddress(interfaceName, address)
@@ -145,6 +150,7 @@ class ServerTunnelConnection: Connection {
     
     /// Read packets from the UTUN interface.
     func readPackets() {
+        testVPNLog(self.TAG + "reading packet from the UTUN interface")
         guard let source = utunSource else { return }
         var packets = [NSData]()
         var protocols = [NSNumber]()
@@ -192,6 +198,7 @@ class ServerTunnelConnection: Connection {
     
     /// Start reading packets from the UTUN interface.
     func startTunnelSource(utunSocket: Int32) {
+        testVPNLog(self.TAG + "start reading packets from the UTUN interface")
         guard setSocketNonBlocking(utunSocket) else { return }
         //        guard let newSource = dispatch_source_create(DISPATCH_SOURCE_TYPE_READ, UInt(utunSocket), 0, dispatch_get_main_queue()) else { return }
         let newSource = DispatchSource.makeReadSource(fileDescriptor: utunSocket, queue: DispatchQueue.main) as! DispatchSource
@@ -212,12 +219,14 @@ class ServerTunnelConnection: Connection {
     
     /// Abort the connection.
     override func abort(_ error: Int = 0) {
+        testVPNLog(self.TAG + "abort")
         super.abort(error)
         closeConnection(.all)
     }
     
     /// Close the connection.
     override func closeConnection(_ direction: TunnelConnectionCloseDirection) {
+        testVPNLog(self.TAG + "closeConnection in the direction: \(direction)")
         super.closeConnection(direction)
         
         if currentCloseDirection == .all {
@@ -234,6 +243,7 @@ class ServerTunnelConnection: Connection {
     
     /// Stop reading packets from the UTUN interface.
     override func suspend() {
+        testVPNLog(self.TAG + "Suspend, stop reading packets from the UTUN interface")
         isSuspended = true
         if let source = utunSource {
             source.suspend()
@@ -242,6 +252,7 @@ class ServerTunnelConnection: Connection {
     
     /// Resume reading packets from the UTUN interface.
     override func resume() {
+        testVPNLog(self.TAG + "Resume, resume reading packets from the UTUN interface")
         isSuspended = false
         if let source = utunSource {
             source.resume()
@@ -251,6 +262,7 @@ class ServerTunnelConnection: Connection {
     
     /// Write packets and associated protocols to the UTUN interface.
     override func sendPackets(_ packets: [Data], protocols: [NSNumber]) {
+        testVPNLog(self.TAG + "write packets and associated protocols to the UTUN interface")
         guard let source = utunSource else { return }
         let utunSocket = Int32((source as DispatchSourceRead).handle)
         
@@ -269,7 +281,9 @@ class ServerTunnelConnection: Connection {
                 }
             }
             else if writeCount < packet.count + MemoryLayout.size(ofValue: protocolNumber) {
-                testVPNLog("Wrote \(writeCount) bytes of a \(packet.count) byte packet to utun")
+                let tmpMutableData = NSMutableData()
+                tmpMutableData.append(packet)
+                testVPNLog(self.TAG + "Wrote \(writeCount) bytes of a \(packet.count) byte packet to utun, content: \(tmpMutableData)")
             }
         }
     }

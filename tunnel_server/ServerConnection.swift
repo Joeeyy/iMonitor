@@ -12,6 +12,7 @@ import Foundation
 class ServerConnection: Connection, StreamDelegate {
     
     // MARK: Properties
+    private let TAG = "ServerConnection: "
     
     /// The stream used to read network data from the connection.
     var readStream: InputStream?
@@ -23,7 +24,7 @@ class ServerConnection: Connection, StreamDelegate {
     
     /// Open the connection to a host and port.
     func open(host: String, port: Int) -> Bool {
-        testVPNLog("Connection \(identifier) connecting to \(host):\(port)")
+        testVPNLog(self.TAG + "ServerConnection \(identifier) connecting to \(host):\(port)")
         
         Stream.getStreamsToHost(withName: host, port: port, inputStream: &readStream, outputStream: &writeStream)
         
@@ -44,6 +45,7 @@ class ServerConnection: Connection, StreamDelegate {
     
     /// Close the connection.
     override func closeConnection(_ direction: TunnelConnectionCloseDirection) {
+        testVPNLog(self.TAG + "closing the connection in the direction :\(direction.description)")
         super.closeConnection(direction)
         
         if let stream = writeStream, isClosedForWrite && savedData.isEmpty {
@@ -71,12 +73,14 @@ class ServerConnection: Connection, StreamDelegate {
     
     /// Abort the connection.
     override func abort(_ error: Int = 0) {
+        testVPNLog(self.TAG + "abort the serverConnection.")
         super.abort(error)
         closeConnection(.all)
     }
     
     /// Stop reading from the connection.
     override func suspend() {
+        testVPNLog(self.TAG + "Suspend, stopping reading from the connection.")
         if let stream = readStream {
             stream.remove(from: .main, forMode: RunLoopMode.defaultRunLoopMode)
         }
@@ -84,6 +88,7 @@ class ServerConnection: Connection, StreamDelegate {
     
     /// Start reading from the connection.
     override func resume() {
+        testVPNLog(self.TAG + "Resume, starting reading from the connection.")
         if let stream = readStream {
             stream.schedule(in: .main, forMode: RunLoopMode.defaultRunLoopMode)
         }
@@ -91,6 +96,7 @@ class ServerConnection: Connection, StreamDelegate {
     
     /// Send data over the connection.
     override func sendData(_ data: Data) {
+        testVPNLog(self.TAG + "Send data over the connection \(self.identifier).")
         guard let stream = writeStream else { return }
         var written = 0
         
@@ -113,9 +119,11 @@ class ServerConnection: Connection, StreamDelegate {
     
     /// Handle an event on a stream.
     func stream(_ aStream: Stream, handle eventCode: Stream.Event) {
+        testVPNLog(self.TAG + "connection \(self.identifier): handle an evenet on a stream")
         switch aStream {
             
         case writeStream!:
+            testVPNLog(self.TAG + "it's an event of a writeStream")
             switch eventCode {
             case [.hasSpaceAvailable]:
                 if !savedData.isEmpty {
@@ -152,6 +160,7 @@ class ServerConnection: Connection, StreamDelegate {
             }
             
         case readStream!:
+            testVPNLog(self.TAG + "it's an event of a readStream")
             switch eventCode {
             case [.hasBytesAvailable]:
                 if let stream = readStream {
@@ -165,13 +174,16 @@ class ServerConnection: Connection, StreamDelegate {
                         }
                         
                         if bytesRead == 0 {
-                            testVPNLog("\(identifier): got EOF, sending close")
+                            testVPNLog(self.TAG + "\(identifier): got EOF, sending close")
                             tunnel?.sendCloseType(.write, forConnection: identifier)
                             closeConnection(.read)
                             break
                         }
                         
                         let readData = NSData(bytes: readBuffer, length: bytesRead)
+                        let tmpMutableData = NSMutableData()
+                        tmpMutableData.append(readData as Data)
+                        testVPNLog(self.TAG + "data read: \(tmpMutableData)")
                         tunnel?.sendData(readData as Data, forConnection: identifier)
                     }
                 }

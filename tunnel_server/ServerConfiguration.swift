@@ -4,6 +4,7 @@
  
  Abstract:
  This file contains the ServerConfiguration class. The ServerConfiguration class is used to parse the SimpleTunnel server configuration.
+ Configuration类，用于解析SimpleTunnel服务器配置。
  */
 
 import Foundation
@@ -13,6 +14,7 @@ import SystemConfiguration
 class ServerConfiguration {
     
     // MARK: Properties
+    private let TAG = "ServerConfiguration: "
     
     /// A dictionary containing configuration parameters.
     var configuration: [String: Any]
@@ -23,6 +25,7 @@ class ServerConfiguration {
     // MARK: Initializers
     
     init() {
+        testVPNLog(self.TAG + "initializing ServerConfiguration")
         configuration = [String: Any]()
         addressPool = nil
     }
@@ -31,6 +34,7 @@ class ServerConfiguration {
     
     /// Read the configuration settings from a plist on disk.
     func loadFromFileAtPath(path: String) -> Bool {
+        testVPNLog(self.TAG + "reading the configuration settings from a plist on disk.")
         
         guard let fileStream = InputStream(fileAtPath: path) else {
             testVPNLog("Failed to open \(path) for reading")
