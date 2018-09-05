@@ -293,8 +293,8 @@ public func getIFAddresses() -> [String] {
 }
 
 // make post
-public func postRequest(url: String) -> String? {
-    var ret = ""
+public func postRequest(url: String, completion: @escaping ((AnyObject)->Void)){
+    
     let sessionConfig = URLSessionConfiguration.default
     sessionConfig.timeoutIntervalForRequest = 5.0
     sessionConfig.timeoutIntervalForResource = 5.0
@@ -316,11 +316,13 @@ public func postRequest(url: String) -> String? {
             return
         }
         
-        testVPNLog((NSString(data: data!, encoding: String.Encoding.utf8.rawValue)as?String)!)
+        //testVPNLog((NSString(data: data!, encoding: String.Encoding.utf8.rawValue)as?String)!)
         
         do {
             if let json = try JSONSerialization.jsonObject(with: data!, options: []) as? NSDictionary {
                 testVPNLog("Response: \(json)")
+                //ret = ((NSString(data: data!, encoding: String.Encoding.utf8.rawValue)as?String)!)
+                completion((NSString(data: data!, encoding: String.Encoding.utf8.rawValue)as?String)! as AnyObject)
             } else {
                 let jsonStr = NSString(data: data!, encoding: String.Encoding.utf8.rawValue)// No error thrown, but not NSDictionary
                 testVPNLog("Error could not parse JSON: \(jsonStr)")
@@ -332,10 +334,8 @@ public func postRequest(url: String) -> String? {
             testVPNLog("Error could not parse JSON: '\(jsonStr)'")
             //self.errorResponse(jsonStr!)
         }
-        ret = (NSString(data:data! ,encoding: String.Encoding.utf8.rawValue)as?String)!
     }
     dataTask.resume()
-    return ret
 }
 
 public func testVPNLog(_ message: String){

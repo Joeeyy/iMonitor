@@ -152,6 +152,7 @@ class ViewController: UIViewController {
         // create database
         database = Database()
         database.tableNETWORKFLOWLOGCreate()
+        database.tableAPPCONFIGCreate()
         
         // check ip address
         /*var addresses = [String]()
@@ -159,7 +160,9 @@ class ViewController: UIViewController {
         for address in addresses{
             testVPNLog(address)
         }*/
-        postRequest(url: "http://192.168.43.137/test/checkin/checkin.php")
+        postRequest(url: "http://192.168.43.137/test/checkin/checkin.php") { retStr in
+            testVPNLog(self.TAG + "\(retStr)")
+        }
     }
 
     override func didReceiveMemoryWarning() {

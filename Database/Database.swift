@@ -10,6 +10,13 @@ import Foundation
 import SQLite
 import testVPNServices
 
+public enum AppConfigKeys: String {
+    case imei = "imei"
+    case phone_number = "phone_number"
+    case currentIP = "currentIP"
+    case networkType = "networkType"
+}
+
 struct Database {
     var db: SQLite.Connection!
     let TAG = "Database: "
@@ -73,8 +80,17 @@ struct Database {
     let TABLE_NETWORKFLOWLOG_DIRECTION = Expression<String>("direction")
     // ------------------- create table for network flow log --------------------- />
     
+    // </ ------------------- create table for app configuration ---------------------
+    let TABLE_APPCONFIG = Table("App_Config")
+    let TABLE_APPCONFIG_KEY = Expression<String>("key")
+    let TABLE_APPCONFIG_VALUE = Expression<String>("value")
+    // ------------------- create table for app configuration --------------------- />
     
     // </ ACTIONs
+    /*
+     FOR NETWORK FLOW LOG TABLE
+     */
+    // create table for network flow log
     func tableNETWORKFLOWLOGCreate() -> Void{
         do {
             try db.run(TABLE_NETWORKFLOWLOG.create { table in
@@ -91,10 +107,11 @@ struct Database {
             })
             testVPNLog(self.TAG + "create table NETWORKFLOWLOG successfully.")
         } catch {
-            testVPNLog(self.TAG + "create table error: \(error)")
+            testVPNLog(self.TAG + "create table NETWORKFLOWLOG error: \(error)")
         }
     }
     
+    // insert a network flow into NETWORKFLOWLOG
     func tableNETWORKFLOWLOGInsertItem(srcIP: String, srcPort: String, dstIP: String, dstPort: String, length: Int, proto: String, time: String, app: String, direction: String){
         let insert = TABLE_NETWORKFLOWLOG.insert(TABLE_NETWORKFLOWLOG_SRCIP <- srcIP,
                                                  TABLE_NETWORKFLOWLOG_SRCPORT <- srcPort,
@@ -113,6 +130,7 @@ struct Database {
         }
     }
     
+    // check all logs in NETWORKFLOWLOG
     func queryTableNETWORKFLOWLOG(){
         for record in try! db.prepare(TABLE_NETWORKFLOWLOG){
             testVPNLog(self.TAG + "\nid: \(record[TABLE_NETWORKFLOWLOG_ID]), srcIP: \(record[TABLE_NETWORKFLOWLOG_SRCIP]), srcPort: \(record[TABLE_NETWORKFLOWLOG_SRCPORT]), dstIP: \(record[TABLE_NETWORKFLOWLOG_DSTIP]), dstPort: \(record[TABLE_NETWORKFLOWLOG_DSTPORT]), length: \(record[TABLE_NETWORKFLOWLOG_LENGTH]), protocol: \(record[TABLE_NETWORKFLOWLOG_PROTO]), time: \(record[TABLE_NETWORKFLOWLOG_TIME]), app: \(record[TABLE_NETWORKFLOWLOG_APP]), direction: \(record[TABLE_NETWORKFLOWLOG_DIRECTION])")
@@ -139,6 +157,7 @@ struct Database {
         }
     }*/
     
+    // Delete an item in NETWORKFLOWLOG by id
     func tableNETWORKFLOWLOGDeleteItem(id: Int){
         let record = TABLE_NETWORKFLOWLOG.filter(TABLE_NETWORKFLOWLOG_ID == id)
         do {
@@ -152,5 +171,76 @@ struct Database {
             testVPNLog(self.TAG + "delete record with id: \(id) failed. error: \(error)")
         }
     }
+    
+    /*
+     FOR APP CONFIG TABLE
+     */
+    // create app config table
+    func tableAPPCONFIGCreate() {
+        do {
+            try db.run(TABLE_APPCONFIG.create { table in
+                table.column(TABLE_APPCONFIG_KEY)
+                table.column(TABLE_APPCONFIG_VALUE)
+            })
+            testVPNLog(self.TAG + "create table APPCONFIG successfully.")
+        } catch {
+            testVPNLog(self.TAG + "create table APPCONFIG error: \(error)")
+        }
+    }
+    
+    // insert a record into APP CONFIG table
+    func tableAPPCONFIGInsertItem(key: String, value: String){
+        let insert = TABLE_APPCONFIG.insert(
+            TABLE_APPCONFIG_KEY <- key,
+            TABLE_APPCONFIG_VALUE <- value
+        )
+        do {
+            try db.run(insert)
+            testVPNLog(self.TAG + "insert a record into table APPCONFIG succeeded.")
+        } catch {
+            testVPNLog(self.TAG + "insert a record into table APPCONFIG failed.")
+        }
+    }
+    
+    // delete a record from APP CONFIG table by key name
+    func tableAPPCONFIGDeleteItem(key: String) {
+        let record = TABLE_APPCONFIG.filter(TABLE_APPCONFIG_KEY == key)
+        do {
+            try db.run(record.delete())
+            testVPNLog(self.TAG + "delete record with key: \(key) successfully.")
+        } catch {
+            testVPNLog(self.TAG + "delete record with key: \(key) failed.")
+        }
+    }
+    
+    // update a record in APP CONFIG table by key name
+    func tableAPPCONFIGUpdateItem(key: String, value: String) {
+        let record = TABLE_APPCONFIG.filter(TABLE_APPCONFIG_KEY == key)
+        do {
+            if try db.run(record.update(TABLE_APPCONFIG_VALUE <- value)) > 0{
+                testVPNLog(self.TAG + "update reocrd of key: \(key) succeeded to value: \(value). ")
+            }
+            else {
+                testVPNLog(self.TAG + "update record of key: \(key) failed. no such record with that key.")
+            }
+        } catch {
+            testVPNLog(self.TAG + "error occured when update record with key: \(key), error: \(error)")
+        }
+    }
+    
+    // get value of a record in APP CONFIG table by key name
+    func tableAPPCONFIGQueryItem(key: String) {
+        let filtered_table = TABLE_APPCONFIG.filter(TABLE_APPCONFIG_KEY == key)
+        do {
+            let records = try! db.prepare(filtered_table)
+            testVPNLog(self.TAG + "\(records.underestimatedCount)")
+            for record in records{
+                testVPNLog(self.TAG + "checked: key: \(key), value: \(record[TABLE_APPCONFIG_VALUE])")
+            }
+        } catch {
+            testVPNLog(self.TAG + "error occured when querying record with key: \(key), error: \(error)")
+        }
+    }
+    
     // ACTIONs />
 }
