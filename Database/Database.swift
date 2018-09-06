@@ -13,8 +13,9 @@ import testVPNServices
 public enum AppConfigKeys: String {
     case imei = "imei"
     case phone_number = "phone_number"
-    case currentIP = "currentIP"
+    case ip = "ip"
     case networkType = "networkType"
+    case port = "port"
 }
 
 struct Database {
@@ -48,7 +49,7 @@ struct Database {
         let sqlFilePath = pathToDatabase!
         
         do {
-            db = try Connection(sqlFilePath)
+            db = try SQLite.Connection(sqlFilePath)
             testVPNLog(self.TAG + "connect database successfully at \(sqlFilePath)")
             
             
@@ -144,18 +145,20 @@ struct Database {
         
     }*/
     
-    /*func tableLampUpdateItem(address: Int, newName: String) -> Void {
-        let item = TABLE_LAMP.filter(TABLE_LAMP_ADDRESS == address)
+    // update tableNETWORKFLOWLOG target key with value
+    func tableNETWORKFLOWLOGUpdateItem(key: String, value: String){
+        let record = TABLE_NETWORKFLOWLOG.filter(TABLE_NETWORKFLOWLOG_SRCPORT == key||TABLE_NETWORKFLOWLOG_DSTPORT == key)
         do {
-            if try db.run(item.update(TABLE_LAMP_NAME <- newName)) > 0 {
-                print("灯光\(address) 更新成功")
-            } else {
-                print("没有发现 灯光条目 \(address)")
+            if try db.run(record.update(TABLE_NETWORKFLOWLOG_SRCPORT <- value)) > 0{
+                testVPNLog(self.TAG + "update reocrd of key: \(key) succeeded to value: \(value). ")
+            }
+            else {
+                testVPNLog(self.TAG + "update record of key: \(key) failed. no such record with that key.")
             }
         } catch {
-            print("灯光\(address) 更新失败：\(error)")
+            testVPNLog(self.TAG + "error occured when update record with key: \(key), error: \(error)")
         }
-    }*/
+    }
     
     // Delete an item in NETWORKFLOWLOG by id
     func tableNETWORKFLOWLOGDeleteItem(id: Int){
@@ -231,16 +234,13 @@ struct Database {
     // get value of a record in APP CONFIG table by key name
     func tableAPPCONFIGQueryItem(key: String) -> String?{
         let filtered_table = TABLE_APPCONFIG.filter(TABLE_APPCONFIG_KEY == key)
-        do {
-            let records = try! db.prepare(filtered_table)
-            testVPNLog(self.TAG + "\(records.underestimatedCount)")
-            for record in records{
-                testVPNLog(self.TAG + "checked: key: \(key), value: \(record[TABLE_APPCONFIG_VALUE])")
-                return record[TABLE_APPCONFIG_VALUE]
-            }
-        } catch {
-            testVPNLog(self.TAG + "error occured when querying record with key: \(key), error: \(error)")
+        
+        let records = try! db.prepare(filtered_table)
+        for record in records{
+            testVPNLog(self.TAG + "checked: key: \(key), value: \(record[TABLE_APPCONFIG_VALUE])")
+            return record[TABLE_APPCONFIG_VALUE]
         }
+
         return nil
     }
     

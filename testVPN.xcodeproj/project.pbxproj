@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5E10695D2140314200184A1E /* Database.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ED107FB213D5031001A6752 /* Database.swift */; };
 		5E222C87212DA9D6006FC341 /* ClientTunnel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E222C86212DA9D6006FC341 /* ClientTunnel.swift */; };
 		5E222C89212DAD51006FC341 /* Tunnel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E222C88212DAD51006FC341 /* Tunnel.swift */; };
 		5E222C8B212FD2DC006FC341 /* Connection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E222C8A212FD2DC006FC341 /* Connection.swift */; };
@@ -1176,6 +1177,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5E10695D2140314200184A1E /* Database.swift in Sources */,
 				5ED108A6213EAF79001A6752 /* testVPNServices-Bridging-Header.h in Sources */,
 				5E222C87212DA9D6006FC341 /* ClientTunnel.swift in Sources */,
 				5E222C89212DAD51006FC341 /* Tunnel.swift in Sources */,

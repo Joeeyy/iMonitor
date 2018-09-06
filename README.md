@@ -86,6 +86,22 @@ Answer:
     > packetTunnel似乎有每一个packet的协议。
     > 利用completionHandler解决了http请求返回值的问题
     > 完成向log中插入本机ip
+    
+    > packetTunnel readPacketResult返回两个参数，packetData和packetProtocolNumber，通过packetProtocolNumber可以获取相应的协议，但是appProxy和packetTunnel具体是什么关系？Plus, readPacket是在Connection上进行的
+    > 在NWTCPConnection上提供远端地址和本地地址的获取。
+    > TCP 本地ip地址也许还有点用，但是port地址似乎没什么用？但是还是完成了记录
+    > [iOS接口查询](https://developer.xamarin.com/api/type/NetworkExtension.NWTcpConnection/)
+    
+    TODO:
+        1. 确定流量协议
+        2. 确定UDPFlow的目标地址ip-port
+        3. 初步考虑UI实现
+        4. 记录需要优化的部分，主要是代码的模块化以及各模块之间的设计。
+
+14. 2018-09-06
+    > 确定UDP远端ip、port信息获取方式。看函数里就有了。
+    > 
+
 
 ## bundle id获取
 1. 关于获取手机上已经安装的app列表
@@ -97,6 +113,9 @@ Answer:
 2. 关于apple store爬虫
     > 1 [js版本的爬虫模块](https://www.npmjs.com/package/app-store-scraper)
     利用该脚本完成了爬虫
+
+## 优化需求：
+1. postRequest函数应该由更高的可用性
     
     
 ## 测试记录（testVPN）

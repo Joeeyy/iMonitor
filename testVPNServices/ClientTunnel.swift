@@ -29,6 +29,7 @@ extension NWTCPConnectionState: CustomStringConvertible {
 open class ClientTunnel: Tunnel {
     
     // MARK: Properties
+    private var database: Database!
     
     private let TAG = "ClientTunnel: "
     
@@ -175,6 +176,21 @@ open class ClientTunnel: Tunnel {
         case .connected:
             if let remoteAddress = self.connection!.remoteAddress as? NWHostEndpoint {
                 remoteHost = remoteAddress.hostname
+            }
+            
+            let port = (self.connection!.localAddress as? NWHostEndpoint)?.port
+            
+            testVPNLog(self.TAG + "\(port)")
+            database = Database()
+            let lastPort = self.database.tableAPPCONFIGQueryItem(key: "port")
+            if lastPort == nil {
+                self.database.tableAPPCONFIGInsertItem(key: "port", value: port!)
+                self.database.tableNETWORKFLOWLOGUpdateItem(key: "localPort", value: port!)
+            }else if lastPort == port{
+                // do nothing
+            }else {
+                self.database.tableAPPCONFIGUpdateItem(key: "port", value: port!)
+                self.database.tableNETWORKFLOWLOGUpdateItem(key: "localPort", value: port!)
             }
             
             // Start reading messages from the tunnel connection.
