@@ -216,7 +216,7 @@ class ClientAppProxyTCPConnection : ClientAppProxyConnection {
             if currentPort == nil{
                 currentPort = "localPort"
             }
-            self.database.tableNETWORKFLOWLOGInsertItem(srcIP: currentIP!, srcPort: currentPort!, dstIP: (self.TCPFlow.remoteEndpoint as! NWHostEndpoint).hostname, dstPort: (self.TCPFlow.remoteEndpoint as! NWHostEndpoint).port, length: readData.count, proto: "", time: getTime(), app: self.TCPFlow.metaData.sourceAppSigningIdentifier, direction: "out")
+            self.database.tableNETWORKFLOWLOGInsertItem(srcIP: currentIP!, srcPort: currentPort!, dstIP: (self.TCPFlow.remoteEndpoint as! NWHostEndpoint).hostname, dstPort: (self.TCPFlow.remoteEndpoint as! NWHostEndpoint).port, length: readData.count, proto: "TCP", time: getTime(), app: self.TCPFlow.metaData.sourceAppSigningIdentifier, direction: "out")
             self.database.queryTableNETWORKFLOWLOG()
         }
     }
@@ -237,7 +237,7 @@ class ClientAppProxyTCPConnection : ClientAppProxyConnection {
             currentPort = "localPort"
         }
         testVPNLog(self.TAG + "[Send Back To APP] time: \(getTime()), length: \(data.count), to app: \(TCPFlow.metaData.sourceAppSigningIdentifier), from: \(TCPFlow.remoteEndpoint)")
-        self.database.tableNETWORKFLOWLOGInsertItem(srcIP: (self.TCPFlow.remoteEndpoint as! NWHostEndpoint).hostname, srcPort: (self.TCPFlow.remoteEndpoint as! NWHostEndpoint).port, dstIP: currentIP!, dstPort: currentPort!, length: data.count, proto: "", time: getTime(), app: self.TCPFlow.metaData.sourceAppSigningIdentifier, direction: "in")
+        self.database.tableNETWORKFLOWLOGInsertItem(srcIP: (self.TCPFlow.remoteEndpoint as! NWHostEndpoint).hostname, srcPort: (self.TCPFlow.remoteEndpoint as! NWHostEndpoint).port, dstIP: currentIP!, dstPort: currentPort!, length: data.count, proto: "TCP", time: getTime(), app: self.TCPFlow.metaData.sourceAppSigningIdentifier, direction: "in")
         self.database.queryTableNETWORKFLOWLOG()
     }
 }
@@ -322,13 +322,13 @@ class ClientAppProxyUDPConnection : ClientAppProxyConnection {
                     ])
                 
                 testVPNLog(self.TAG + "[Send Data To SERVER] time: \(getTime()), length: \(datagram.count), from app: \(self.UDPFlow.metaData.sourceAppSigningIdentifier), to: \(endpoint)")
-                let currentIP = self.database.tableAPPCONFIGQueryItem(key: "ip")
-                var currentPort = self.database.tableAPPCONFIGQueryItem(key: "port")
-                if currentPort == nil{
-                    currentPort = "localPort"
-                }
-                testVPNLog(self.TAG + currentIP!)
-                self.database.tableNETWORKFLOWLOGInsertItem(srcIP: (UDPFlow.localEndpoint as? NWHostEndpoint)?.hostname, srcPort: (UDPFlow.localEndpoint as? NWHostEndpoint)?.port, dstIP: endpoint.hostname, dstPort: endpoint.port, length: datagram.count, proto: "UDP", time: getTime(), app: self.UDPFlow.metaData.sourceAppSigningIdentifier, direction: "out")
+                //let currentIP = self.database.tableAPPCONFIGQueryItem(key: "ip")
+                //var currentPort = self.database.tableAPPCONFIGQueryItem(key: "port")
+                //if currentPort == nil{
+                //    currentPort = "localPort"
+                //}
+                //testVPNLog(self.TAG + currentIP!)
+                self.database.tableNETWORKFLOWLOGInsertItem(srcIP: ((self.UDPFlow.localEndpoint as? NWHostEndpoint)?.hostname)!, srcPort: ((self.UDPFlow.localEndpoint as? NWHostEndpoint)?.port)!, dstIP: endpoint.hostname, dstPort: endpoint.port, length: datagram.count, proto: "UDP", time: getTime(), app: self.UDPFlow.metaData.sourceAppSigningIdentifier, direction: "out")
                 self.database.queryTableNETWORKFLOWLOG()
             }
         }

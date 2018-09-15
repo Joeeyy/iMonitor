@@ -100,7 +100,19 @@ Answer:
 
 14. 2018-09-06
     > 确定UDP远端ip、port信息获取方式。看函数里就有了。不过暂时没有对UDP流量log进行记录。
-    > 
+
+15. 2018-09-07
+    > app proxy 只能够通过configuration profile进行配置，里面的ip:port是写死了的，但是可以考虑在load 配置的时候根据vpn的ip:port对配置进行修改？
+    
+16. 2018-09-13
+    > 已经将全部项目移植到testVPNUIDesign中，下一步做日志可视化。
+    > 日志可视化已经完成，下一步考虑本机已装app发现功能。
+    > 已装app检测比较有难度，无法通过代码在客户端进行，但似乎通过MDM可以进行，但MDM配置起来似乎比较麻烦。
+    
+    Questions: 
+    1. 无法确定手机上已经装的app   ->  也许可以通过提前设定感兴趣的部分app来完成部分app流量的检测
+    2. 无法识别TCP Payload遵循的协议 ->  To be done
+    3. 后期考虑界面和使用逻辑优化。
 
 
 ## bundle id获取
@@ -116,6 +128,10 @@ Answer:
 
 ## 优化需求：
 1. postRequest函数应该由更高的可用性
+
+## 关于UI设计。
+三个部分：1、VPN；2、app proxy；3、settings
+1. VPN
     
     
 ## 测试记录（testVPN）
