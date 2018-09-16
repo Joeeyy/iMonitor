@@ -126,6 +126,12 @@ Answer:
     > 1 [js版本的爬虫模块](https://www.npmjs.com/package/app-store-scraper)
     利用该脚本完成了爬虫
 
+## 服务器MacOS转Linux系列编译
+    初步使用CentOS 7.1失败，尝试使用Ubuntu 16.04
+    [C和swift混编](http://ankit.im/swift/2016/04/06/compiling-and-interpolating-C-using-swift-package-manager/)
+    NetworkExtension属于MacOS、iOS系列API，其他操作系统不会有。
+    Server重写放后，先重写界面吧。
+
 ## 优化需求：
 1. postRequest函数应该由更高的可用性
 

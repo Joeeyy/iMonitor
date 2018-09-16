@@ -8,6 +8,18 @@
 
 /* Begin PBXBuildFile section */
 		5E10695D2140314200184A1E /* Database.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ED107FB213D5031001A6752 /* Database.swift */; };
+		5E19A50A214CE16200D2C358 /* SwitchTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E19A509214CE16200D2C358 /* SwitchTableViewCell.swift */; };
+		5E19A50C214CE17000D2C358 /* NameValueTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E19A50B214CE17000D2C358 /* NameValueTableViewCell.swift */; };
+		5E19A50E214CE1F700D2C358 /* NetlogTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E19A50D214CE1F700D2C358 /* NetlogTableViewCell.swift */; };
+		5E19A510214CE25300D2C358 /* VPNTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E19A50F214CE25300D2C358 /* VPNTableViewController.swift */; };
+		5E19A512214CE26100D2C358 /* PerAppProxyTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E19A511214CE26100D2C358 /* PerAppProxyTableViewController.swift */; };
+		5E19A514214CE26E00D2C358 /* VPNConfigurationTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E19A513214CE26E00D2C358 /* VPNConfigurationTableViewController.swift */; };
+		5E19A518214CE2EF00D2C358 /* PerAppProxyConfigurationTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E19A517214CE2EF00D2C358 /* PerAppProxyConfigurationTableViewController.swift */; };
+		5E19A51A214CE84300D2C358 /* ButtonTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E19A519214CE84300D2C358 /* ButtonTableViewCell.swift */; };
+		5E19A51C214E29EB00D2C358 /* ImageLabelTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E19A51B214E29EB00D2C358 /* ImageLabelTableViewCell.swift */; };
+		5E19A520214E329700D2C358 /* VPNDetailTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E19A51F214E329700D2C358 /* VPNDetailTableViewController.swift */; };
+		5E19A522214E3AA000D2C358 /* VPNConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E19A521214E3AA000D2C358 /* VPNConfiguration.swift */; };
+		5E19A524214E3AC000D2C358 /* utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E19A523214E3AC000D2C358 /* utils.swift */; };
 		5E222C87212DA9D6006FC341 /* ClientTunnel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E222C86212DA9D6006FC341 /* ClientTunnel.swift */; };
 		5E222C89212DAD51006FC341 /* Tunnel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E222C88212DAD51006FC341 /* Tunnel.swift */; };
 		5E222C8B212FD2DC006FC341 /* Connection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E222C8A212FD2DC006FC341 /* Connection.swift */; };
@@ -169,6 +181,18 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		5E19A509214CE16200D2C358 /* SwitchTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchTableViewCell.swift; sourceTree = "<group>"; };
+		5E19A50B214CE17000D2C358 /* NameValueTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NameValueTableViewCell.swift; sourceTree = "<group>"; };
+		5E19A50D214CE1F700D2C358 /* NetlogTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetlogTableViewCell.swift; sourceTree = "<group>"; };
+		5E19A50F214CE25300D2C358 /* VPNTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VPNTableViewController.swift; sourceTree = "<group>"; };
+		5E19A511214CE26100D2C358 /* PerAppProxyTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerAppProxyTableViewController.swift; sourceTree = "<group>"; };
+		5E19A513214CE26E00D2C358 /* VPNConfigurationTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VPNConfigurationTableViewController.swift; sourceTree = "<group>"; };
+		5E19A517214CE2EF00D2C358 /* PerAppProxyConfigurationTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerAppProxyConfigurationTableViewController.swift; sourceTree = "<group>"; };
+		5E19A519214CE84300D2C358 /* ButtonTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButtonTableViewCell.swift; sourceTree = "<group>"; };
+		5E19A51B214E29EB00D2C358 /* ImageLabelTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageLabelTableViewCell.swift; sourceTree = "<group>"; };
+		5E19A51F214E329700D2C358 /* VPNDetailTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VPNDetailTableViewController.swift; sourceTree = "<group>"; };
+		5E19A521214E3AA000D2C358 /* VPNConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VPNConfiguration.swift; sourceTree = "<group>"; };
+		5E19A523214E3AC000D2C358 /* utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = utils.swift; sourceTree = "<group>"; };
 		5E222C86212DA9D6006FC341 /* ClientTunnel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientTunnel.swift; sourceTree = "<group>"; };
 		5E222C88212DAD51006FC341 /* Tunnel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tunnel.swift; sourceTree = "<group>"; };
 		5E222C8A212FD2DC006FC341 /* Connection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Connection.swift; sourceTree = "<group>"; };
@@ -362,6 +386,38 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		5E19A4FF214CDEB300D2C358 /* PerAppProxyUI */ = {
+			isa = PBXGroup;
+			children = (
+				5E19A511214CE26100D2C358 /* PerAppProxyTableViewController.swift */,
+				5E19A517214CE2EF00D2C358 /* PerAppProxyConfigurationTableViewController.swift */,
+			);
+			path = PerAppProxyUI;
+			sourceTree = "<group>";
+		};
+		5E19A507214CDEBA00D2C358 /* VPNUI */ = {
+			isa = PBXGroup;
+			children = (
+				5E19A50F214CE25300D2C358 /* VPNTableViewController.swift */,
+				5E19A513214CE26E00D2C358 /* VPNConfigurationTableViewController.swift */,
+				5E19A51F214E329700D2C358 /* VPNDetailTableViewController.swift */,
+				5E19A521214E3AA000D2C358 /* VPNConfiguration.swift */,
+			);
+			path = VPNUI;
+			sourceTree = "<group>";
+		};
+		5E19A508214CDEE400D2C358 /* CommonUI */ = {
+			isa = PBXGroup;
+			children = (
+				5E19A509214CE16200D2C358 /* SwitchTableViewCell.swift */,
+				5E19A50B214CE17000D2C358 /* NameValueTableViewCell.swift */,
+				5E19A50D214CE1F700D2C358 /* NetlogTableViewCell.swift */,
+				5E19A519214CE84300D2C358 /* ButtonTableViewCell.swift */,
+				5E19A51B214E29EB00D2C358 /* ImageLabelTableViewCell.swift */,
+			);
+			path = CommonUI;
+			sourceTree = "<group>";
+		};
 		5E4409BB212BE35000778393 = {
 			isa = PBXGroup;
 			children = (
@@ -392,6 +448,9 @@
 		5E4409C6212BE35000778393 /* testVPN */ = {
 			isa = PBXGroup;
 			children = (
+				5E19A508214CDEE400D2C358 /* CommonUI */,
+				5E19A507214CDEBA00D2C358 /* VPNUI */,
+				5E19A4FF214CDEB300D2C358 /* PerAppProxyUI */,
 				5E4409D9212BE35900778393 /* testVPN.entitlements */,
 				5E4409C7212BE35000778393 /* AppDelegate.swift */,
 				5E4409C9212BE35000778393 /* ViewController.swift */,
@@ -399,6 +458,7 @@
 				5E4409CE212BE35200778393 /* Assets.xcassets */,
 				5E4409D0212BE35200778393 /* LaunchScreen.storyboard */,
 				5E4409D3212BE35200778393 /* Info.plist */,
+				5E19A523214E3AC000D2C358 /* utils.swift */,
 			);
 			path = testVPN;
 			sourceTree = "<group>";
@@ -1148,9 +1208,21 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5E19A512214CE26100D2C358 /* PerAppProxyTableViewController.swift in Sources */,
+				5E19A514214CE26E00D2C358 /* VPNConfigurationTableViewController.swift in Sources */,
+				5E19A522214E3AA000D2C358 /* VPNConfiguration.swift in Sources */,
+				5E19A510214CE25300D2C358 /* VPNTableViewController.swift in Sources */,
+				5E19A51C214E29EB00D2C358 /* ImageLabelTableViewCell.swift in Sources */,
+				5E19A51A214CE84300D2C358 /* ButtonTableViewCell.swift in Sources */,
+				5E19A50E214CE1F700D2C358 /* NetlogTableViewCell.swift in Sources */,
+				5E19A524214E3AC000D2C358 /* utils.swift in Sources */,
 				5ED107FC213D5031001A6752 /* Database.swift in Sources */,
+				5E19A50A214CE16200D2C358 /* SwitchTableViewCell.swift in Sources */,
 				5E4409CA212BE35000778393 /* ViewController.swift in Sources */,
+				5E19A520214E329700D2C358 /* VPNDetailTableViewController.swift in Sources */,
+				5E19A518214CE2EF00D2C358 /* PerAppProxyConfigurationTableViewController.swift in Sources */,
 				5E4409C8212BE35000778393 /* AppDelegate.swift in Sources */,
+				5E19A50C214CE17000D2C358 /* NameValueTableViewCell.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
