@@ -11,22 +11,31 @@
  */
 
 import UIKit
+import NetworkExtension
 
 class VPNTableViewController: UITableViewController {
+    
+    // MARK: Properties
+    
+    var app_vpn: NEVPNManager?
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // Uncomment the following line to preserve selection between presentations
-        // self.clearsSelectionOnViewWillAppear = false
-
-        // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
-        // self.navigationItem.rightBarButtonItem = self.editButtonItem
+        loadAppVPNCongigurations()
+        
     }
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        
+        // remove notification of vpn status
+        // NotificationCenter.default.removeObserver(self, name: NSNotification.Name.NEVPNStatusDidChange, object: nil)
     }
 
     // MARK: - Table view data source
@@ -59,6 +68,23 @@ class VPNTableViewController: UITableViewController {
             guard let cell = tableView.dequeueReusableCell(withIdentifier: "switchTableViewCell", for: indexPath) as? SwitchTableViewCell else {
                 fatalError("Error creating a SwitchTableViewCell.")
             }
+            cell.toggle.addTarget(self, action: #selector(self.startStopVPN), for: .allTouchEvents)
+            cell.toggle.isOn = app_vpn?.connection.status == .connected
+            print(app_vpn == nil)
+            NSLog("AINASSINE: \(app_vpn?.connection.status == .connected)")
+            if app_vpn?.connection.status == .connected{
+                cell.startLabel.text = "Connected"
+                NSLog("AINASSINE: Connected")
+            }else if app_vpn?.connection.status == .disconnected{
+                cell.startLabel.text = "Disconnected"
+                NSLog("AINASSINE: DisConnected")
+            }else if app_vpn?.connection.status == .disconnecting{
+                cell.startLabel.text = "Disconnecting"
+                NSLog("AINASSINE: DisConnecting")
+            }else if app_vpn?.connection.status == .connecting{
+                cell.startLabel.text = "Connecting"
+                NSLog("AINASSINE: Connecting")
+            }
             
             return cell
         }
@@ -79,57 +105,106 @@ class VPNTableViewController: UITableViewController {
 
         return cell
     }
-
-    /*
-    // Override to support conditional editing of the table view.
-    override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
-        // Return false if you do not want the specified item to be editable.
-        return true
-    }
-    */
-
-    /*
-    // Override to support editing the table view.
-    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
-        if editingStyle == .delete {
-            // Delete the row from the data source
-            tableView.deleteRows(at: [indexPath], with: .fade)
-        } else if editingStyle == .insert {
-            // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
-        }    
-    }
-    */
-
-    /*
-    // Override to support rearranging the table view.
-    override func tableView(_ tableView: UITableView, moveRowAt fromIndexPath: IndexPath, to: IndexPath) {
-
-    }
-    */
-
-    /*
-    // Override to support conditional rearranging of the table view.
-    override func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
-        // Return false if you do not want the item to be re-orderable.
-        return true
-    }
-    */
     
     // MARK: Actions
     
-    // segue to vpn configuration list
-    @IBAction func showVPNConfiugrations(_ sender: Any?){
-        performSegue(withIdentifier: "showVPNConfigurations", sender: sender)
+    // load all vpn configurations from shared property
+    func loadAppVPNCongigurations(){
+        NETunnelProviderManager.loadAllFromPreferences() { vpnManagers, _ in
+            
+            guard let tmpVPNManagers = vpnManagers else {
+                return
+            }
+            
+            if tmpVPNManagers.count != 0 {
+                (self.tableView.cellForRow(at: [0,0]) as? SwitchTableViewCell)?.toggle.isEnabled = true
+                self.app_vpn = tmpVPNManagers.first!
+                // notification of vpn status
+                NotificationCenter.default.addObserver(forName: NSNotification.Name.NEVPNStatusDidChange, object: self.app_vpn?.connection, queue: OperationQueue.main, using: { notification in
+                    guard let toggleCell = self.tableView.cellForRow(at: [0,0]) as? SwitchTableViewCell else {
+                        fatalError()
+                    }
+                    if self.app_vpn!.connection.status == .connected {
+                        toggleCell.startLabel.text = "Connected"
+                        toggleCell.toggle.isOn = true
+                    }
+                    else if self.app_vpn!.connection.status == .disconnected || !self.app_vpn!.isEnabled{
+                        toggleCell.startLabel.text = "Disconnected"
+                        toggleCell.toggle.isOn = false
+                    }
+                    else if self.app_vpn?.connection.status == .connecting {
+                        toggleCell.startLabel.text = "Connecting"
+                        toggleCell.toggle.isOn = false
+                    }
+                    else if self.app_vpn?.connection.status == .disconnecting {
+                        toggleCell.startLabel.text = "Disconnecting"
+                        toggleCell.toggle.isOn = true
+                    }
+                })
+            } else {
+                self.app_vpn = nil
+                (self.tableView.cellForRow(at: [0,0]) as? SwitchTableViewCell)?.toggle.isEnabled = false
+            }
+            self.tableView.reloadData()
+        }
+    }
+    
+    // start or stop vpn
+    @IBAction func startStopVPN() {
+        print("startStop VPN")
+        if app_vpn?.isEnabled == false{
+            app_vpn?.isEnabled = true
+            app_vpn?.saveToPreferences(){ error in
+                if error != nil {
+                    self.app_vpn?.isEnabled = false
+                    (self.tableView.cellForRow(at: [0,0]) as? SwitchTableViewCell)?.toggle.isOn = false
+                }
+                self.startStopAfterEnable()
+            }
+        }else{
+            startStopAfterEnable()
+        }
+    }
+    
+    private func startStopAfterEnable(){
+        if app_vpn?.connection.status == .disconnected {
+            do{
+                try self.app_vpn?.connection.startVPNTunnel()
+            }catch {
+                
+            }
+        }
+        else if app_vpn?.connection.status == .connected {
+            self.app_vpn?.connection.stopVPNTunnel()
+        }
     }
 
-    /*
     // MARK: - Navigation
+    
+    @IBAction func unwindToVPNTableView(_ sender: UIStoryboardSegue){
+        self.viewDidLoad()
+    }
 
     // In a storyboard-based application, you will often want to do a little preparation before navigation
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         // Get the new view controller using segue.destinationViewController.
         // Pass the selected object to the new view controller.
+        
+        switch segue.identifier ?? "" {
+        case "showVPNConfigurationsTable":
+            guard let dstVewController = segue.destination as? VPNConfigurationTableViewController else {
+                fatalError("Error creating a VPNConfigurationTableViewController.")
+            }
+            if app_vpn != nil {
+                dstVewController.inited = true
+                dstVewController.app_vpn = self.app_vpn
+            }
+            else {
+                dstVewController.inited = false
+            }
+        default:
+            fatalError("unexpected segue id: \(segue.identifier)")
+        }
     }
-    */
 
 }

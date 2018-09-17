@@ -20,6 +20,7 @@ class VPNDetailTableViewController: UITableViewController, UITextFieldDelegate {
     var addMode: Bool = true
     var inited: Bool = true
     var vpn: VPNConfiguration?
+    var delete: Bool = false
     
     var ipNotNil = false
     var portNotNil = false
@@ -37,7 +38,7 @@ class VPNDetailTableViewController: UITableViewController, UITextFieldDelegate {
             self.navigationItem.rightBarButtonItem?.isEnabled = false
         }
         else {
-            
+            self.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.edit, target: self, action: #selector(self.enterEditMode(_:)))
         }
     }
 
@@ -84,8 +85,10 @@ class VPNDetailTableViewController: UITableViewController, UITextFieldDelegate {
             guard let cell = tableView.dequeueReusableCell(withIdentifier: "buttonTableViewCell", for: indexPath) as? ButtonTableViewCell else {
                 fatalError("Error creating a ButtonTableViewCell. ")
             }
+            
             cell.button.setTitle("Delete VPN Configuration", for: UIControlState.normal)
             cell.button.setTitleColor(UIColor.red, for: UIControlState.normal)
+            cell.button.addTarget(self, action: #selector(self.deleteVPNConfiguration(_:)), for: UIControlEvents.touchUpInside)
             
             return cell
         }
@@ -121,41 +124,6 @@ class VPNDetailTableViewController: UITableViewController, UITextFieldDelegate {
         
         return cell
     }
-
-    /*
-    // Override to support conditional editing of the table view.
-    override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
-        // Return false if you do not want the specified item to be editable.
-        return true
-    }
-    */
-
-    /*
-    // Override to support editing the table view.
-    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
-        if editingStyle == .delete {
-            // Delete the row from the data source
-            tableView.deleteRows(at: [indexPath], with: .fade)
-        } else if editingStyle == .insert {
-            // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
-        }    
-    }
-    */
-
-    /*
-    // Override to support rearranging the table view.
-    override func tableView(_ tableView: UITableView, moveRowAt fromIndexPath: IndexPath, to: IndexPath) {
-
-    }
-    */
-
-    /*
-    // Override to support conditional rearranging of the table view.
-    override func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
-        // Return false if you do not want the item to be re-orderable.
-        return true
-    }
-    */
     
     // MARK: TextFieldDelegate
     
@@ -243,27 +211,21 @@ class VPNDetailTableViewController: UITableViewController, UITextFieldDelegate {
         self.present(alert, animated: true, completion: nil)
     }
     
-    @IBAction func unwind(_ sender: Any?){
-        print("ABC")
-        performSegue(withIdentifier: "unwindToConfigurationTableView", sender: sender)
-    }
-    
+    // save vpn configuration
     @IBAction func saveVPNCongfiguration(_ sender: Any){
     //private func saveVPNConfiguration(){
         let name = (tableView.cellForRow(at: [0,0]) as? NameValueTableViewCell)?.valueTextField.text
         let ip = (tableView.cellForRow(at: [0,1]) as? NameValueTableViewCell)?.valueTextField.text
         let port = (tableView.cellForRow(at: [0,2]) as? NameValueTableViewCell)?.valueTextField.text
         
-        let vpnConfiguration = VPNConfiguration(vpnName: name!, vpnIP: ip!, vpnPort: port!, enabled: inited ? true : false)
+        let vpnConfiguration = VPNConfiguration(vpnName: name!, vpnIP: ip!, vpnPort: port!, enabled: inited ? false : true)
         if vpnConfiguration.checkIPFormat() && vpnConfiguration.checkPortFormat(){
-            //saveVPNConfiguration(vpnConfiguration: vpnConfiguration)
-            //vpns.append(vpnConfiguration)
-            //self.navigationController?.popViewController(animated: true)
             self.vpn = vpnConfiguration
             if !inited{
                 saveVPNConfiguration(vpnConfiguration: self.vpn!)
+            }else{
+                performSegue(withIdentifier: "unwindToConfigurationTableView", sender: sender)
             }
-            performSegue(withIdentifier: "unwindToConfigurationTableView", sender: sender)
         }else{
             let alert = UIAlertController(title: "Error", message: "Save VPN configuration failed, please check ip and port format.", preferredStyle: .alert)
             let action = UIAlertAction(title: "OK", style: .default) {action in
@@ -274,6 +236,7 @@ class VPNDetailTableViewController: UITableViewController, UITextFieldDelegate {
         }
     }
     
+    // create an app vpn configuration
     private func saveVPNConfiguration(vpnConfiguration: VPNConfiguration){
         let manager = NETunnelProviderManager()
         manager.localizedDescription = "testVPN"
@@ -291,9 +254,88 @@ class VPNDetailTableViewController: UITableViewController, UITextFieldDelegate {
             }
             alert.addAction(action)
             self.present(alert, animated: true, completion: nil)
+            
+            self.performSegue(withIdentifier: "unwindToConfigurationTableView", sender: nil)
         }
     }
     
+    // come into edit mode
+    @IBAction func enterEditMode(_ sender: Any?) {
+        self.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.cancel, target: self, action: #selector(self.cancelEdit(_:)))
+        enableCellAt(indexPath: [0,0])
+        enableCellAt(indexPath: [0,1])
+        enableCellAt(indexPath: [0,2])
+        enableCellAt(indexPath: [0,3])
+    }
+    
+    private func enableCellAt(indexPath: IndexPath) {
+        if indexPath == [0,3] {
+            guard let cell = tableView.cellForRow(at: indexPath) as? ButtonTableViewCell else {
+                fatalError("Error creating a NameValueTableViewCell.")
+            }
+            cell.button.setTitle("Save Changes", for: .normal)
+            cell.button.setTitleColor(UIColor.blue, for: .normal)
+            cell.button.removeTarget(self, action: #selector(self.deleteVPNConfiguration(_:)), for: UIControlEvents.touchUpInside)
+            cell.button.addTarget(self, action: #selector(self.editVPNConfiguration(_:)), for: UIControlEvents.touchUpInside)
+            
+            return
+        }
+        
+        guard let cell = tableView.cellForRow(at: indexPath) as? NameValueTableViewCell else {
+            fatalError("Error creating a NameValueTableViewCell.")
+        }
+        cell.valueTextField.isEnabled = true
+        if indexPath == [0,0] {
+            cell.valueTextField.delegate = self
+            cell.valueTextField.becomeFirstResponder()
+        }
+    }
+    
+    // cancel edition
+    @IBAction func cancelEdit(_ sender: Any?) {
+        guard let cell = tableView.cellForRow(at: [0,3]) as? ButtonTableViewCell else {
+            fatalError("Error creating a NameValueTableViewCell.")
+        }
+        cell.button.removeTarget(self, action: #selector(self.editVPNConfiguration(_:)), for: UIControlEvents.touchUpInside)
+        
+        self.viewDidLoad()
+        self.tableView.reloadData()
+    }
+    
+    // edit a vpn configuration
+    @IBAction func editVPNConfiguration(_ sender: Any?) {
+        print("edit")
+        let name = (tableView.cellForRow(at: [0,0]) as? NameValueTableViewCell)?.valueTextField.text
+        let ip = (tableView.cellForRow(at: [0,1]) as? NameValueTableViewCell)?.valueTextField.text
+        let port = (tableView.cellForRow(at: [0,2]) as? NameValueTableViewCell)?.valueTextField.text
+        
+        // if no changes, cancel
+        if name == vpn?.VPNName && ip == vpn?.VPNIP && port == vpn?.VPNPort {
+            self.cancelEdit(nil)
+            
+            return
+        }
+        
+        let tmpVPNConfiguration = VPNConfiguration(vpnName: name!, vpnIP: ip!, vpnPort: port!, enabled: (vpn?.enabled)!)
+        if tmpVPNConfiguration.checkIPFormat() && tmpVPNConfiguration.checkPortFormat(){
+            //saveVPNConfigurationChanges(vpnConfiguration: tmpMyVPNConfiguration, vpnManager: vpnConfiguration)
+            vpn = tmpVPNConfiguration
+            performSegue(withIdentifier: "unwindToConfigurationTableView", sender: sender)
+        }else{
+            let alert = UIAlertController(title: "Error", message: "Save VPN configuration changes failed, please check ip and port format.", preferredStyle: .alert)
+            let action = UIAlertAction(title: "OK", style: .default) {action in
+                
+            }
+            alert.addAction(action)
+            self.present(alert, animated: true, completion: nil)
+        }
+    }
+
+    // delete a vpn configuration
+    @IBAction func deleteVPNConfiguration(_ sender: Any?) {
+        self.delete = true
+        performSegue(withIdentifier: "unwindToConfigurationTableView", sender: sender)
+    }
 
     
     // MARK: - Navigation

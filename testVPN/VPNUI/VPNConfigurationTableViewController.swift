@@ -17,23 +17,21 @@ class VPNConfigurationTableViewController: UITableViewController {
     
     // MARK: Properties
     
-    var app_vpns = [NEVPNManager]()
+    var app_vpn: NEVPNManager?
     var vpnConfigurations = [VPNConfiguration]()
     var enabledIndex = -1
-    var enabledVPN = NEVPNManager.shared()
     var inited = false
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        self.navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Add", style: UIBarButtonItemStyle.done, target: self, action: #selector(self.addVPNDetail(_:)))
-        if !inited {
-            self.navigationItem.rightBarButtonItem?.isEnabled = false
-        }
         
-        loadAppVPNCongigurations()
+        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: "back", style: UIBarButtonItemStyle.plain, target: self, action: #selector(self.returnToVPNTableView(_:)))
+        self.navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Add", style: UIBarButtonItemStyle.plain, target: self, action: #selector(self.addVPNDetail(_:)))
+        self.navigationItem.rightBarButtonItem?.isEnabled = inited
+        
         if let savedVPNConfigurations = loadVPNConfigurations() {
             vpnConfigurations += savedVPNConfigurations
+            tableView.reloadData()
         }
     }
 
@@ -73,48 +71,42 @@ class VPNConfigurationTableViewController: UITableViewController {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: "nameValueTableViewCell", for: indexPath) as? NameValueTableViewCell else {
             fatalError("error creating a NameValueTableViewCell.")
         }
-        cell.nameLabel.text = ""
+        if vpnConfigurations[indexPath.row].enabled {
+            cell.nameLabel.text = "✔️"
+            enabledIndex = indexPath.row
+        }else{
+            cell.nameLabel.text = ""
+        }
         cell.valueTextField.text = "\(tmpVPNConf.VPNIP):\(tmpVPNConf.VPNPort)"
         cell.valueTextField.isEnabled = false
+        cell.accessoryType = .detailButton
         
         return cell
     }
-
-    /*
-    // Override to support conditional editing of the table view.
-    override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
-        // Return false if you do not want the specified item to be editable.
-        return true
+    
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        if enabledIndex == indexPath.row {
+            return
+        }
+        
+        let lastEnabledIndex = enabledIndex
+        enabledIndex = indexPath.row
+        saveVPNConfigurationChanges(vpnConfiguration: vpnConfigurations[enabledIndex], vpnManager: app_vpn!)
+        vpnConfigurations[enabledIndex].enabled = true
+        tableView.reloadRows(at: [indexPath], with: .automatic)
+        
+        if lastEnabledIndex >= 0 {
+            vpnConfigurations[lastEnabledIndex].enabled = false
+            tableView.reloadRows(at: [[0,lastEnabledIndex]], with: .automatic)
+        }
+        
+        saveVPNConfigurations()
     }
-    */
 
-    /*
-    // Override to support editing the table view.
-    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
-        if editingStyle == .delete {
-            // Delete the row from the data source
-            tableView.deleteRows(at: [indexPath], with: .fade)
-        } else if editingStyle == .insert {
-            // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
-        }    
+    override func tableView(_ tableView: UITableView, accessoryButtonTappedForRowWith indexPath: IndexPath) {
+        tableView.selectRow(at: indexPath, animated: true, scrollPosition: UITableViewScrollPosition.none)
     }
-    */
-
-    /*
-    // Override to support rearranging the table view.
-    override func tableView(_ tableView: UITableView, moveRowAt fromIndexPath: IndexPath, to: IndexPath) {
-
-    }
-    */
-
-    /*
-    // Override to support conditional rearranging of the table view.
-    override func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
-        // Return false if you do not want the item to be re-orderable.
-        return true
-    }
-    */
-
+    
     // MARK: Actions
     
     // show vpn detail
@@ -122,20 +114,9 @@ class VPNConfigurationTableViewController: UITableViewController {
         performSegue(withIdentifier: "addVPNDetail", sender: sender)
     }
     
-    // load all vpn configurations from shared property
-    func loadAppVPNCongigurations(){
-        NETunnelProviderManager.loadAllFromPreferences() { vpnManagers, _ in
-            
-            guard let tmpVPNManagers = vpnManagers else {
-                return
-            }
-            
-            self.app_vpns = tmpVPNManagers
-            if self.app_vpns.count != 0 {
-                self.inited = true
-            }
-            self.tableView.reloadData()
-        }
+    // return to vpn table view
+    @IBAction func returnToVPNTableView(_ sender: Any?) {
+        performSegue(withIdentifier: "unwindToVPNTableView", sender: sender)
     }
     
     // load vpn configurations
@@ -144,7 +125,7 @@ class VPNConfigurationTableViewController: UITableViewController {
         return NSKeyedUnarchiver.unarchiveObject(withFile: VPNConfiguration.ArchiveURL.path) as? [VPNConfiguration]
     }
     
-    // save vpn configurations
+    // save vpn configurations on the disk
     private func saveVPNConfigurations(){
         let isSuccessfullySaved = NSKeyedArchiver.archiveRootObject(vpnConfigurations, toFile: VPNConfiguration.ArchiveURL.path)
         
@@ -155,21 +136,69 @@ class VPNConfigurationTableViewController: UITableViewController {
         }
     }
     
+    // save to app's vpn
+    private func saveVPNConfigurationChanges(vpnConfiguration: VPNConfiguration, vpnManager: NEVPNManager){
+        vpnManager.protocolConfiguration?.serverAddress = "\(vpnConfiguration.VPNIP):\(vpnConfiguration.VPNPort)"
+        vpnManager.saveToPreferences() { error in
+            if error != nil{
+                fatalError("Error occurred while adding configuration, please check your settings.")
+            }
+        }
+    }
+    
+    private func deleteAppVPN(){
+        app_vpn!.removeFromPreferences() { error in
+            if error != nil {
+                
+            }
+            //self.navigationController?.popViewController(animated: true)
+            self.app_vpn = nil
+        }
+    }
     
     // MARK: - Navigation
     
-    // unwind back to last view
+    // unwind back to this view
     @IBAction func unwindToConfigurationTableView(_ sender: UIStoryboardSegue) {
         if let srcViewController = sender.source as? VPNDetailTableViewController, let vpn = srcViewController.vpn {
             if let selectedIndexPath = tableView.indexPathForSelectedRow{
-                // Update an existing Meal
-                vpnConfigurations[selectedIndexPath.row] = vpn
-                tableView.reloadRows(at: [selectedIndexPath], with: .none)
+                // if delete mode
+                if srcViewController.delete {
+                    vpnConfigurations.remove(at: selectedIndexPath.row)
+                    
+                    if vpnConfigurations.count == 0 {
+                        // if selected item is last vpn
+                        self.inited = false
+                        deleteAppVPN()
+                    }
+                    else if vpn.enabled {
+                        // if selected item is enabled
+                        vpnConfigurations.first?.enabled = true
+                        saveVPNConfigurationChanges(vpnConfiguration: vpnConfigurations.first!, vpnManager: app_vpn!)
+                    }
+                    // if selected item is just a common vpn
+                    
+                    tableView.reloadData()
+                }else{
+                    // Update an existing vpn
+                    vpnConfigurations[selectedIndexPath.row] = vpn
+                    tableView.reloadRows(at: [selectedIndexPath], with: .none)
+                    if vpn.enabled {
+                        // modify app's vpn
+                        saveVPNConfigurationChanges(vpnConfiguration: vpn, vpnManager: app_vpn!)
+                    }
+                }
             }
             else{
-                // Add a new meal
+                // Add a new vpn
                 if let fisrtCell = tableView.cellForRow(at: [0,0]) as? ButtonTableViewCell {
                     tableView.deleteRows(at: [[0,0]], with: .automatic)
+                    NETunnelProviderManager.loadAllFromPreferences(){ vpns, _ in
+                        guard let tmpVPNs = vpns else {
+                            fatalError()
+                        }
+                        self.app_vpn = tmpVPNs.first
+                    }
                 }
                 let newIndexPath = IndexPath(row: vpnConfigurations.count, section: 0)
                 vpnConfigurations.append(vpn)
@@ -177,7 +206,7 @@ class VPNConfigurationTableViewController: UITableViewController {
                 self.navigationItem.rightBarButtonItem?.isEnabled = true
             }
             
-            // Save the meals
+            // Save the vpns
             saveVPNConfigurations()
         }
     }
@@ -218,6 +247,8 @@ class VPNConfigurationTableViewController: UITableViewController {
             dstViewController.addMode = false
             dstViewController.inited = true
             dstViewController.vpn = selectedVPN
+        case "unwindToVPNTableView":
+            print("do nothing")
         default:
             print("unhandled segue identifier: \(segue.identifier)")
         }
