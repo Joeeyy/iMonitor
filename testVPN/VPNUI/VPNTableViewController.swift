@@ -12,17 +12,52 @@
 
 import UIKit
 import NetworkExtension
+import testVPNServices
 
 class VPNTableViewController: UITableViewController {
     
     // MARK: Properties
     
     var app_vpn: NEVPNManager?
+    
+    var database: Database!
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        // database settings
+        
+        // create database
+        database = Database()
+        database.tableNETWORKFLOWLOGCreate()
+        database.tableAPPCONFIGCreate()
+        
+        // to get certain about IP address of this device
+        postRequest(url: "http://192.168.43.137/test/checkin/checkin.php") { retStr in
+            do{
+                //if let json = try JSONSerialization.jsonObject(with: retStr.data, options: []) as? NSDictionary {
+                //    self.database.tableAPPCONFIGInsertItem(key: "ip", value: json.value(forKey: "ip") as! String)
+                //}
+                if let json = try JSONSerialization.jsonObject(with: retStr as! Data, options: []) as? NSDictionary {
+                    let lastIP = self.database.tableAPPCONFIGQueryItem(key: "ip")
+                    if lastIP == nil {
+                        self.database.tableAPPCONFIGInsertItem(key: "ip", value: json.value(forKey: "ip") as! String)
+                    }else if lastIP == json.value(forKey: "ip") as? String{
+                        // do nothing
+                    }else {
+                        self.database.tableAPPCONFIGUpdateItem(key: "ip", value: json.value(forKey: "ip") as! String)
+                    }
+                }
+            }
+            catch{
+                
+            }
+        }
+        
+        
+        // load vpn configurations
         loadAppVPNCongigurations()
+        
         
     }
 
@@ -70,20 +105,14 @@ class VPNTableViewController: UITableViewController {
             }
             cell.toggle.addTarget(self, action: #selector(self.startStopVPN), for: .allTouchEvents)
             cell.toggle.isOn = app_vpn?.connection.status == .connected
-            print(app_vpn == nil)
-            NSLog("AINASSINE: \(app_vpn?.connection.status == .connected)")
             if app_vpn?.connection.status == .connected{
                 cell.startLabel.text = "Connected"
-                NSLog("AINASSINE: Connected")
             }else if app_vpn?.connection.status == .disconnected{
                 cell.startLabel.text = "Disconnected"
-                NSLog("AINASSINE: DisConnected")
             }else if app_vpn?.connection.status == .disconnecting{
                 cell.startLabel.text = "Disconnecting"
-                NSLog("AINASSINE: DisConnecting")
             }else if app_vpn?.connection.status == .connecting{
                 cell.startLabel.text = "Connecting"
-                NSLog("AINASSINE: Connecting")
             }
             
             return cell
@@ -151,7 +180,6 @@ class VPNTableViewController: UITableViewController {
     
     // start or stop vpn
     @IBAction func startStopVPN() {
-        print("startStop VPN")
         if app_vpn?.isEnabled == false{
             app_vpn?.isEnabled = true
             app_vpn?.saveToPreferences(){ error in

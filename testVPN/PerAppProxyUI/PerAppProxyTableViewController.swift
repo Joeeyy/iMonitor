@@ -6,18 +6,29 @@
 //  Copyright © 2018年 NUDT. All rights reserved.
 //
 
+/*
+ */
+
 import UIKit
+import NetworkExtension
 
 class PerAppProxyTableViewController: UITableViewController {
+    
+    // MAKR: Properties
+    
+    // all perAppProxy
+    var perAppProxys = [NEAppProxyProviderManager]()
+    // selected perAppProxy
+    var targetAppProxy = NEAppProxyProviderManager.shared()
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // Uncomment the following line to preserve selection between presentations
-        // self.clearsSelectionOnViewWillAppear = false
-
-        // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
-        // self.navigationItem.rightBarButtonItem = self.editButtonItem
+        // load all per-app proxy of this app
+        loadPerAppProxy()
+        
+        // button to show netlog table view
+        self.navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Net Logs", style: UIBarButtonItemStyle.plain, target: self, action: #selector(self.showNetlogs(_:)))
     }
 
     override func didReceiveMemoryWarning() {
@@ -29,67 +40,157 @@ class PerAppProxyTableViewController: UITableViewController {
 
     override func numberOfSections(in tableView: UITableView) -> Int {
         // #warning Incomplete implementation, return the number of sections
-        return 0
+        return 2
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         // #warning Incomplete implementation, return the number of rows
-        return 0
+        if section == 0{
+            return 1
+        }
+        else {
+            return perAppProxys.count
+        }
     }
-
-    /*
+    
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        if perAppProxys[indexPath.row].isEnabled == true {
+            return
+        }
+        perAppProxys[indexPath.row].isEnabled = true
+    }
+    
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "reuseIdentifier", for: indexPath)
-
-        // Configure the cell...
-
-        return cell
+        if indexPath == [0,0] {
+            // for control cell
+            guard let cell = tableView.dequeueReusableCell(withIdentifier: "switchTableViewCell") as? SwitchTableViewCell else {
+                fatalError("Error creating NameValueTableViewCell.")
+            }
+            cell.toggle.isOn = self.targetAppProxy.connection.status == .connected ? true : false
+            if self.targetAppProxy.connection.status == .connected {
+                cell.startLabel.text = "Connected"
+            }else if self.targetAppProxy.connection.status == .disconnected {
+                cell.startLabel.text = "Disconnected"
+            }else if self.targetAppProxy.connection.status == .disconnecting {
+                cell.startLabel.text = "Disconnecting"
+            }else if self.targetAppProxy.connection.status == .connecting {
+                cell.startLabel.text = "connecting"
+            }
+            cell.toggle.addTarget(self, action: #selector(self.startStopAppProxy), for: .allTouchEvents)
+            return cell
+        }else{
+            // for per-app proxy configuration cells
+            guard let cell = tableView.dequeueReusableCell(withIdentifier: "nameValueTableViewCell") as? NameValueTableViewCell else {
+                fatalError("Error creating NameValueTableViewCell.")
+            }
+            cell.valueTextField.isEnabled = false
+            cell.nameLabel.text = perAppProxys[indexPath.row].isEnabled ? "✔️" : ""
+            cell.valueTextField.text = perAppProxys[indexPath.row].localizedDescription
+            cell.accessoryType = UITableViewCellAccessoryType.detailButton
+            
+            return cell
+        }
     }
-    */
-
-    /*
-    // Override to support conditional editing of the table view.
-    override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
-        // Return false if you do not want the specified item to be editable.
-        return true
+    
+    override func tableView(_ tableView: UITableView, accessoryButtonTappedForRowWith indexPath: IndexPath) {
+        tableView.selectRow(at: indexPath, animated: true, scrollPosition: UITableViewScrollPosition.none)
     }
-    */
 
-    /*
-    // Override to support editing the table view.
-    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
-        if editingStyle == .delete {
-            // Delete the row from the data source
-            tableView.deleteRows(at: [indexPath], with: .fade)
-        } else if editingStyle == .insert {
-            // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
-        }    
+    // MARK: Actions
+    
+    // show netlogs
+    @IBAction func showNetlogs(_ sender: Any? ){
+        performSegue(withIdentifier: "showNetlogs", sender: sender)
     }
-    */
-
-    /*
-    // Override to support rearranging the table view.
-    override func tableView(_ tableView: UITableView, moveRowAt fromIndexPath: IndexPath, to: IndexPath) {
-
+    
+    // load per-app proxy
+    private func loadPerAppProxy() {
+        NEAppProxyProviderManager.loadAllFromPreferences() { managers, error in
+            assert(Thread.isMainThread)
+            if error != nil {
+                myLog("load per app proxy failed.")
+                return
+            }
+            
+            guard managers?.first != nil else {
+                myLog("No per app proxy loaded.")
+                return
+            }
+            
+            self.perAppProxys = managers!
+            self.tableView.reloadData()
+            for perAppProxy in self.perAppProxys {
+                if perAppProxy.isEnabled {
+                    self.targetAppProxy = perAppProxy
+                }
+            }
+            
+            NotificationCenter.default.addObserver(forName: NSNotification.Name.NEVPNStatusDidChange, object: self.targetAppProxy.connection, queue: OperationQueue.main, using: { notification in
+                guard let cell = self.tableView.cellForRow(at: [0,0]) as? SwitchTableViewCell else {
+                    fatalError("Error creating SwitchTableViewCell.")
+                }
+                if self.targetAppProxy.connection.status == .connected {
+                    cell.startLabel.text = "Connected"
+                    cell.toggle.isOn = true
+                }else if self.targetAppProxy.connection.status == .disconnected{
+                    cell.startLabel.text = "Disconnected"
+                    cell.toggle.isOn = false
+                }else if self.targetAppProxy.connection.status == .disconnecting{
+                    cell.startLabel.text = "Disconnecting"
+                    cell.toggle.isOn = true
+                }else if self.targetAppProxy.connection.status == .connecting{
+                    cell.startLabel.text = "Connecting"
+                    cell.toggle.isOn = false
+                }
+            })
+            self.tableView.reloadData()
+        }
     }
-    */
-
-    /*
-    // Override to support conditional rearranging of the table view.
-    override func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
-        // Return false if you do not want the item to be re-orderable.
-        return true
+    
+    // start target app proxy
+    @IBAction func startStopAppProxy(){
+        if targetAppProxy.connection.status == .connected {
+            let session = self.targetAppProxy.connection as! NETunnelProviderSession
+            
+            session.stopTunnel()
+        }
+        else if targetAppProxy.connection.status == .disconnected {
+            let session = self.targetAppProxy.connection as! NETunnelProviderSession
+            do {
+                try session.startTunnel(options: nil)
+            }
+            catch {
+                
+            }
+        }
     }
-    */
-
-    /*
+    
+    
     // MARK: - Navigation
 
     // In a storyboard-based application, you will often want to do a little preparation before navigation
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         // Get the new view controller using segue.destinationViewController.
         // Pass the selected object to the new view controller.
+        switch segue.identifier ?? ""{
+        case "showPerAppProxyDetail":
+            guard let dst = segue.destination as? PerAppProxyConfigurationTableViewController else {
+                fatalError("cast to PerAppProxyConfigurationTableViewController failed.")
+            }
+            guard let selectedCell = sender as? NameValueTableViewCell else {
+                fatalError("cast to PerAppProxyItemTableViewCell failed.")
+            }
+            guard let selectedIndex = tableView.indexPath(for: selectedCell) else{
+                fatalError("the selected cell is not shown any more")
+            }
+            
+            dst.targetPerAppProxy = perAppProxys[selectedIndex.row]
+        case "showNetlogs":
+            print("nothing to be done")
+        default:
+            myLog("no such segue identifier")
+        }
     }
-    */
+
 
 }

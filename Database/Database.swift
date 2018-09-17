@@ -132,10 +132,25 @@ struct Database {
     }
     
     // check all logs in NETWORKFLOWLOG
-    func queryTableNETWORKFLOWLOG(){
+    func queryTableNETWORKFLOWLOG() -> [Netlog]{
+        var logArray = [Netlog]()
         for record in try! db.prepare(TABLE_NETWORKFLOWLOG){
-            testVPNLog(self.TAG + "\nid: \(record[TABLE_NETWORKFLOWLOG_ID]), srcIP: \(record[TABLE_NETWORKFLOWLOG_SRCIP]), srcPort: \(record[TABLE_NETWORKFLOWLOG_SRCPORT]), dstIP: \(record[TABLE_NETWORKFLOWLOG_DSTIP]), dstPort: \(record[TABLE_NETWORKFLOWLOG_DSTPORT]), length: \(record[TABLE_NETWORKFLOWLOG_LENGTH]), protocol: \(record[TABLE_NETWORKFLOWLOG_PROTO]), time: \(record[TABLE_NETWORKFLOWLOG_TIME]), app: \(record[TABLE_NETWORKFLOWLOG_APP]), direction: \(record[TABLE_NETWORKFLOWLOG_DIRECTION])")
+            var netlog = Netlog()
+            netlog.app = record[TABLE_NETWORKFLOWLOG_APP]
+            netlog.id = record[TABLE_NETWORKFLOWLOG_ID]
+            netlog.srcIP = record[TABLE_NETWORKFLOWLOG_SRCIP]
+            netlog.srcPort = record[TABLE_NETWORKFLOWLOG_SRCPORT]
+            netlog.dstIP = record[TABLE_NETWORKFLOWLOG_DSTIP]
+            netlog.dstPort = record[TABLE_NETWORKFLOWLOG_DSTPORT]
+            netlog.time = record[TABLE_NETWORKFLOWLOG_TIME]
+            netlog.direction = record[TABLE_NETWORKFLOWLOG_DIRECTION]
+            netlog.proto = record[TABLE_NETWORKFLOWLOG_PROTO]
+            netlog.length = record[TABLE_NETWORKFLOWLOG_LENGTH]
+            logArray.append(netlog)
+            
+            //testVPNLog(self.TAG + "\nid: \(record[TABLE_NETWORKFLOWLOG_ID]), srcIP: \(record[TABLE_NETWORKFLOWLOG_SRCIP]), srcPort: \(record[TABLE_NETWORKFLOWLOG_SRCPORT]), dstIP: \(record[TABLE_NETWORKFLOWLOG_DSTIP]), dstPort: \(record[TABLE_NETWORKFLOWLOG_DSTPORT]), length: \(record[TABLE_NETWORKFLOWLOG_LENGTH]), protocol: \(record[TABLE_NETWORKFLOWLOG_PROTO]), time: \(record[TABLE_NETWORKFLOWLOG_TIME]), app: \(record[TABLE_NETWORKFLOWLOG_APP]), direction: \(record[TABLE_NETWORKFLOWLOG_DIRECTION])")
         }
+        return logArray
     }
     
     /*func readTableNETWORKFLOWLog(address: Int) -> Void {

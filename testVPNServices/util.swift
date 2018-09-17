@@ -339,6 +339,32 @@ public func postRequest(url: String, completion: @escaping ((AnyObject)->Void)){
     dataTask.resume()
 }
 
+public struct Netlog {
+    public var id: Int
+    public var srcIP: String
+    public var srcPort: String
+    public var length: Int
+    public var proto: String
+    public var time: String
+    public var dstIP: String
+    public var dstPort: String
+    public var app: String
+    public var direction: String
+    
+    public init(){
+        id = 0
+        srcIP = ""
+        srcPort = ""
+        dstIP = ""
+        dstPort = ""
+        length = 0
+        time = ""
+        direction = ""
+        app = ""
+        proto = ""
+    }
+}
+
 public func testVPNLog(_ message: String){
     NSLog("<AINASSINE> "+message)
 }
