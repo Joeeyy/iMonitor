@@ -88,9 +88,10 @@ struct Database {
     // ------------------- create table for app configuration --------------------- />
     
     // </ ACTIONs
-    /*
+    
+    /*************************************************
      FOR NETWORK FLOW LOG TABLE
-     */
+     *************************************************/
     // create table for network flow log
     func tableNETWORKFLOWLOGCreate() -> Void{
         do {
@@ -134,7 +135,9 @@ struct Database {
     // check all logs in NETWORKFLOWLOG
     func queryTableNETWORKFLOWLOG() -> [Netlog]{
         var logArray = [Netlog]()
-        for record in try! db.prepare(TABLE_NETWORKFLOWLOG){
+        
+        for record in try! db.prepare(TABLE_NETWORKFLOWLOG.order(TABLE_NETWORKFLOWLOG_TIME.desc)){
+        //for record in try! db.prepare(query){
             var netlog = Netlog()
             netlog.app = record[TABLE_NETWORKFLOWLOG_APP]
             netlog.id = record[TABLE_NETWORKFLOWLOG_ID]
@@ -147,18 +150,36 @@ struct Database {
             netlog.proto = record[TABLE_NETWORKFLOWLOG_PROTO]
             netlog.length = record[TABLE_NETWORKFLOWLOG_LENGTH]
             logArray.append(netlog)
-            
-            //testVPNLog(self.TAG + "\nid: \(record[TABLE_NETWORKFLOWLOG_ID]), srcIP: \(record[TABLE_NETWORKFLOWLOG_SRCIP]), srcPort: \(record[TABLE_NETWORKFLOWLOG_SRCPORT]), dstIP: \(record[TABLE_NETWORKFLOWLOG_DSTIP]), dstPort: \(record[TABLE_NETWORKFLOWLOG_DSTPORT]), length: \(record[TABLE_NETWORKFLOWLOG_LENGTH]), protocol: \(record[TABLE_NETWORKFLOWLOG_PROTO]), time: \(record[TABLE_NETWORKFLOWLOG_TIME]), app: \(record[TABLE_NETWORKFLOWLOG_APP]), direction: \(record[TABLE_NETWORKFLOWLOG_DIRECTION])")
         }
         return logArray
     }
     
-    /*func readTableNETWORKFLOWLog(address: Int) -> Void {
-        for record in try! db.prepare(TABLE_LAMP.filter(TABLE_LAMP_ADDRESS == address)) {
-            print("\nid: \(record[TABLE_NETWORKFLOWLOG_ID]), srcIP: \(record[TABLE_NETWORKFLOWLOG_SRCIP]), srcPort: \(record[TABLE_NETWORKFLOWLOG_SRCPORT]), dstIP: \(record[TABLE_NETWORKFLOWLOG_DSTIP]), dstPort: \(record[TABLE_NETWORKFLOWLOG_DSTPORT]), length: \(record[TABLE_NETWORKFLOWLOG_LENGTH]), protocol: \(record[TABLE_NETWORKFLOWLOG_PROTO]), time: \(record[TABLE_NETWORKFLOWLOG_TIME])")
+    // check a certain type of logs by its name
+    func queryTableNETWORKFLOWLOGByAppName(AppName: String) -> [Netlog]{
+        var logArray = [Netlog]()
+        let query = TABLE_NETWORKFLOWLOG.select(*).filter(TABLE_NETWORKFLOWLOG_APP == AppName).order(TABLE_NETWORKFLOWLOG_TIME.desc)
+        for record in try! db.prepare(query){
+            //for record in try! db.prepare(query){
+            var netlog = Netlog()
+            netlog.app = record[TABLE_NETWORKFLOWLOG_APP]
+            netlog.id = record[TABLE_NETWORKFLOWLOG_ID]
+            netlog.srcIP = record[TABLE_NETWORKFLOWLOG_SRCIP]
+            netlog.srcPort = record[TABLE_NETWORKFLOWLOG_SRCPORT]
+            netlog.dstIP = record[TABLE_NETWORKFLOWLOG_DSTIP]
+            netlog.dstPort = record[TABLE_NETWORKFLOWLOG_DSTPORT]
+            netlog.time = record[TABLE_NETWORKFLOWLOG_TIME]
+            netlog.direction = record[TABLE_NETWORKFLOWLOG_DIRECTION]
+            netlog.proto = record[TABLE_NETWORKFLOWLOG_PROTO]
+            netlog.length = record[TABLE_NETWORKFLOWLOG_LENGTH]
+            logArray.append(netlog)
         }
         
-    }*/
+        return logArray
+    }
+    
+    
+        
+    
     
     // update tableNETWORKFLOWLOG target key with value
     func tableNETWORKFLOWLOGUpdateItem(key: String, value: String){
@@ -190,9 +211,9 @@ struct Database {
         }
     }
     
-    /*
+    /*************************************************
      FOR APP CONFIG TABLE
-     */
+     *************************************************/
     // create app config table
     func tableAPPCONFIGCreate() {
         do {

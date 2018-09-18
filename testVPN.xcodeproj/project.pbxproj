@@ -53,8 +53,8 @@
 		5EBD87CA21312E1D00918CC9 /* Connection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E222C8A212FD2DC006FC341 /* Connection.swift */; };
 		5EBD87CB21312E2A00918CC9 /* util.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E440AD0212D9CAD00778393 /* util.swift */; };
 		5ED107FC213D5031001A6752 /* Database.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ED107FB213D5031001A6752 /* Database.swift */; };
-		5ED10805213D64F4001A6752 /* SQLite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5ED10804213D64F4001A6752 /* SQLite.framework */; };
-		5ED108A1213E31C3001A6752 /* SQLite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5ED10884213E31B6001A6752 /* SQLite.framework */; };
+		5ED10805213D64F4001A6752 /* SQLite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5ED10804213D64F4001A6752 /* SQLite.framework */; settings = {ATTRIBUTES = (Required, ); }; };
+		5ED108A1213E31C3001A6752 /* SQLite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5ED10884213E31B6001A6752 /* SQLite.framework */; settings = {ATTRIBUTES = (Required, ); }; };
 		5ED108A4213E3E55001A6752 /* Database.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ED107FB213D5031001A6752 /* Database.swift */; };
 		5ED108A6213EAF79001A6752 /* testVPNServices-Bridging-Header.h in Sources */ = {isa = PBXBuildFile; fileRef = 5ED108A5213EAEB6001A6752 /* testVPNServices-Bridging-Header.h */; };
 /* End PBXBuildFile section */
@@ -235,8 +235,6 @@
 		5EBD87C521312CD800918CC9 /* ServerTunnelConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerTunnelConnection.swift; sourceTree = "<group>"; };
 		5EBD87C721312CEA00918CC9 /* UDPServerConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UDPServerConnection.swift; sourceTree = "<group>"; };
 		5ED107FB213D5031001A6752 /* Database.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Database.swift; sourceTree = "<group>"; };
-		5ED107FF213D58BC001A6752 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
-		5ED10802213D644B001A6752 /* libsqlite3.0.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.0.tbd; path = usr/lib/libsqlite3.0.tbd; sourceTree = SDKROOT; };
 		5ED10804213D64F4001A6752 /* SQLite.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SQLite.framework; path = Carthage/Build/iOS/SQLite.framework; sourceTree = "<group>"; };
 		5ED1080A213E31B6001A6752 /* Planning.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Planning.md; sourceTree = "<group>"; };
 		5ED1080C213E31B6001A6752 /* installation@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "installation@2x.png"; sourceTree = "<group>"; };
@@ -471,8 +469,6 @@
 			children = (
 				5ED10806213E31B6001A6752 /* Carthage */,
 				5ED10804213D64F4001A6752 /* SQLite.framework */,
-				5ED10802213D644B001A6752 /* libsqlite3.0.tbd */,
-				5ED107FF213D58BC001A6752 /* libsqlite3.tbd */,
 				5E440AD2212DA3F600778393 /* NetworkExtension.framework */,
 			);
 			name = Frameworks;
@@ -1020,7 +1016,7 @@
 								enabled = 1;
 							};
 							com.apple.VPNLite = {
-								enabled = 0;
+								enabled = 1;
 							};
 						};
 					};
@@ -1045,6 +1041,9 @@
 								enabled = 1;
 							};
 							com.apple.NetworkExtensions.iOS = {
+								enabled = 1;
+							};
+							com.apple.VPNLite = {
 								enabled = 1;
 							};
 						};
@@ -1187,7 +1186,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/bash;
-			shellScript = "/usr/local/bin/carthage copy-frameworks";
+			shellScript = "/usr/local/bin/carthage copy-frameworks\n";
 		};
 		5ED108A2213E31D7001A6752 /* Run Script */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1202,7 +1201,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "/usr/local/bin/carthage copy-frameworks";
+			shellScript = "/usr/local/bin/carthage copy-frameworks\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

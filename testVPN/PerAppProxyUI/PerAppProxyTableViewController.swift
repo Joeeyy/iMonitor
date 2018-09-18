@@ -186,7 +186,10 @@ class PerAppProxyTableViewController: UITableViewController {
             
             dst.targetPerAppProxy = perAppProxys[selectedIndex.row]
         case "showNetlogs":
-            print("nothing to be done")
+            guard let dstVC = segue.destination as? NetlogsTableViewController else {
+                fatalError("Error creatinga NetlogsTableViewController..")
+            }
+            dstVC.logs = Database().queryTableNETWORKFLOWLOG()
         default:
             myLog("no such segue identifier")
         }

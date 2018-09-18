@@ -42,7 +42,6 @@ class PerAppProxyConfigurationTableViewController: UITableViewController {
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        print(indexPath)
         if indexPath == [0,0] {
             guard let cell = tableView.dequeueReusableCell(withIdentifier: "nameValueTableViewCell", for: indexPath) as? NameValueTableViewCell else {
                 fatalError("create NameValueTableViewCell failed.")
@@ -85,14 +84,25 @@ class PerAppProxyConfigurationTableViewController: UITableViewController {
         }
     }
 
-    /*
     // MARK: - Navigation
 
     // In a storyboard-based application, you will often want to do a little preparation before navigation
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         // Get the new view controller using segue.destinationViewController.
         // Pass the selected object to the new view controller.
+        switch segue.identifier ?? "" {
+        case "showNetlogByApp":
+            guard let dstVC = segue.destination as? NetlogsTableViewController else{
+                fatalError("Error creating a NetlogTableViewCell.")
+            }
+            guard let selectedAppCell = sender as? ImageLabelTableViewCell else {
+                fatalError("Error creating a NetlogTableViewCell.")
+            }
+            let appName = selectedAppCell.label.text
+            dstVC.logs = Database().queryTableNETWORKFLOWLOGByAppName(AppName: appName!)
+        default:
+            NSLog("Unexpected segue id: \(segue.identifier)")
+        }
     }
-    */
 
 }
