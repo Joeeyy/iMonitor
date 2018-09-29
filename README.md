@@ -114,6 +114,31 @@ Answer:
     2. 无法识别TCP Payload遵循的协议 ->  To be done
     3. 后期考虑界面和使用逻辑优化。
 
+17. 2018-09-18 23:00
+> Todo:
+    > 1. 目标app bundleid的确定，以及图标、名称获取。
+    > 2. 服务器要运行在Linux系列的操作系统上。
+    > 3. 服务器抓包过程还没有进行明确。
+    > 4. 整个项目的功能正确性还没有进行验证。
+    > 5. 项目的架构说明书。
+    
+18. 2018-09-20 14:00
+    1. 打开vpn的开关逻辑可以优化
+    2. 服务器可以使用socket，但是如何建立连接，建立连接后如何对来的流量进行处理需要对SimpleTunnel进行梳理再行考虑。
+
+19. 2018-09-23 14:45
+    1. 结束整个代码的梳理。
+    2. 下一步考虑抓包过程。
+
+20. 2018-09-29 16:09
+重新梳理Todo
+> Todo:
+    > 1. 根据bundle_id 列表获取图标
+    > 2. 服务器运行在Linux
+    > 3. 服务器抓包过程
+    > 4. 功能验证
+    > 5. 架构说明
+
 
 ## bundle id获取
 1. 关于获取手机上已经安装的app列表
@@ -125,20 +150,58 @@ Answer:
 2. 关于apple store爬虫
     > 1 [js版本的爬虫模块](https://www.npmjs.com/package/app-store-scraper)
     利用该脚本完成了爬虫
+    
+    2018-09-25:
+    https://itunes.apple.com/cn/genre/ios/id36?mt=5 展示连接。
+    https://itunes.apple.com/cn/genre/ios/id36?mt=8
+    
+    [官方分类显示列表](https://affiliate.itunes.apple.com/resources/documentation/genre-mapping/)
+    [app search](http://itunes.apple.com/search?term=google&country=us&entity=software)
+    param 1: term，搜索关键词
+    param 2: country, 搜索的市场
+    param 3: entity, 限定为software
+    
+    爬虫思路：获取所有分类（genre），按照分类中字母顺序爬取。爬取到的app应该只是名字，注意记录重复的情况。
+    然后根据名称查询到app具体内容。主要是bundle id，图标也是考虑内容之一。
+    已经实现：[link](https://github.com/Joeeyy/app_crawler)
+    记录内容：
+```
+    {
+    "resultCount": number
+    "results": [
+    {
+    
+    开发者相关：
+    artistId: int
+    artistName: str
+    
+    app相关：
+    bundleId: str
+    trackId: int 
+    trackName: str
+    trackViewUrl: str
+    artworkUrl512: str
+    
+    }
+    ...
+    ]
+    }
+```
 
 ## 服务器MacOS转Linux系列编译
+    
     初步使用CentOS 7.1失败，尝试使用Ubuntu 16.04
     [C和swift混编](http://ankit.im/swift/2016/04/06/compiling-and-interpolating-C-using-swift-package-manager/)
     NetworkExtension属于MacOS、iOS系列API，其他操作系统不会有。
     Server重写放后，先重写界面吧。
+    
+    重写界面已经完成，Server想要直接通过编译运行估计不可行，因为NetworkExtension是iOS、MacOS提供的API，Linux系列及其他操作系统不支持。
 
 ## 优化需求：
 1. postRequest函数应该由更高的可用性
 
 ## 关于UI设计。
-三个部分：1、VPN；2、app proxy；3、settings
-1. VPN
-    
+    None
     
 ## 测试记录（testVPN）
 1. 动作一、start vpn tunnel:

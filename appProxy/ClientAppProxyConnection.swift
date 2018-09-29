@@ -125,7 +125,7 @@ class ClientAppProxyConnection : Connection {
             handleErrorCondition(.internal)
             return
         }
-        
+        testVPNLog(self.TAG + "localAddress is: \(localAddress)")
         // Now that the SimpleTunnel connection is open, indicate that we are ready to handle data on the NEAppProxyFlow.
         appProxyFlow.open(withLocalEndpoint: localAddress) { error in
             self.handleSendResult(error as NSError?)

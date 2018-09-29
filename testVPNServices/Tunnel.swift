@@ -142,14 +142,14 @@ open class Tunnel: NSObject {
     func addConnection(_ connection: Connection){
         testVPNLog(self.TAG + "adding connection")
         connections[connection.identifier] = connection
-        var counter = 0
+        /*var counter = 0
         for t in Tunnel.allTunnels{
             testVPNLog(self.TAG + "Tunnel: \(counter)")
             counter += 1
             for c in t.connections{
                 testVPNLog(self.TAG + "connection: \(c.value.identifier)")
             }
-        }
+        }*/
     }
     
     // Remove a connection from the set

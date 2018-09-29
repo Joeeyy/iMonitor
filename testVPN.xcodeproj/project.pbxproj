@@ -222,6 +222,9 @@
 		5E440AD0212D9CAD00778393 /* util.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = util.swift; sourceTree = "<group>"; };
 		5E440AD2212DA3F600778393 /* NetworkExtension.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = NetworkExtension.framework; path = System/Library/Frameworks/NetworkExtension.framework; sourceTree = SDKROOT; };
 		5E61941A214FC7EA00FE8C6A /* NetlogsTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetlogsTableViewController.swift; sourceTree = "<group>"; };
+		5E71DE652154A39F005B283A /* arch.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = arch.md; sourceTree = "<group>"; };
+		5E71DE6D2158C438005B283A /* paper.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = paper.md; sourceTree = "<group>"; };
+		5E71DE6E2158C45B005B283A /* TODO.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = TODO.md; sourceTree = "<group>"; };
 		5EBD87B121312BF300918CC9 /* tunnel_server */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tunnel_server; sourceTree = BUILT_PRODUCTS_DIR; };
 		5EBD87B321312BF300918CC9 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		5EBD87B821312C2F00918CC9 /* config.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = config.plist; sourceTree = "<group>"; };
@@ -422,6 +425,9 @@
 		5E4409BB212BE35000778393 = {
 			isa = PBXGroup;
 			children = (
+				5E71DE6E2158C45B005B283A /* TODO.md */,
+				5E71DE6D2158C438005B283A /* paper.md */,
+				5E71DE652154A39F005B283A /* arch.md */,
 				5E222C8C212FF3CE006FC341 /* README.md */,
 				5ED108A3213E39D0001A6752 /* Database */,
 				5E4409C6212BE35000778393 /* testVPN */,
