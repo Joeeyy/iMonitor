@@ -42,6 +42,7 @@
 		5E440AD4212DA66000778393 /* NetworkExtension.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5E440AD2212DA3F600778393 /* NetworkExtension.framework */; };
 		5E52EABF2188A555009DD858 /* CocoaAsyncSocket.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5E52EABD2188A222009DD858 /* CocoaAsyncSocket.framework */; };
 		5E61941B214FC7EA00FE8C6A /* NetlogsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E61941A214FC7EA00FE8C6A /* NetlogsTableViewController.swift */; };
+		5E815393218ED1DE003F4163 /* SOCKS5Enums.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E815392218ED1DE003F4163 /* SOCKS5Enums.swift */; };
 		5EBD87B421312BF300918CC9 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EBD87B321312BF300918CC9 /* main.swift */; };
 		5EBD87BA21312C4000918CC9 /* AddressPool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EBD87B921312C4000918CC9 /* AddressPool.swift */; };
 		5EBD87BC21312C5400918CC9 /* ServerConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EBD87BB21312C5400918CC9 /* ServerConfiguration.swift */; };
@@ -227,6 +228,7 @@
 		5E71DE652154A39F005B283A /* arch.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = arch.md; sourceTree = "<group>"; };
 		5E71DE6D2158C438005B283A /* paper.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = paper.md; sourceTree = "<group>"; };
 		5E71DE6E2158C45B005B283A /* TODO.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = TODO.md; sourceTree = "<group>"; };
+		5E815392218ED1DE003F4163 /* SOCKS5Enums.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SOCKS5Enums.swift; sourceTree = "<group>"; };
 		5EBD87B121312BF300918CC9 /* tunnel_server */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tunnel_server; sourceTree = BUILT_PRODUCTS_DIR; };
 		5EBD87B321312BF300918CC9 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		5EBD87B821312C2F00918CC9 /* config.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = config.plist; sourceTree = "<group>"; };
@@ -516,6 +518,7 @@
 				5E222C88212DAD51006FC341 /* Tunnel.swift */,
 				5E222C8A212FD2DC006FC341 /* Connection.swift */,
 				5ED108A5213EAEB6001A6752 /* testVPNServices-Bridging-Header.h */,
+				5E815392218ED1DE003F4163 /* SOCKS5Enums.swift */,
 			);
 			path = testVPNServices;
 			sourceTree = "<group>";
@@ -1268,6 +1271,7 @@
 				5E222C87212DA9D6006FC341 /* ClientTunnel.swift in Sources */,
 				5E222C89212DAD51006FC341 /* Tunnel.swift in Sources */,
 				5E440AD1212D9CAD00778393 /* util.swift in Sources */,
+				5E815393218ED1DE003F4163 /* SOCKS5Enums.swift in Sources */,
 				5E222C8B212FD2DC006FC341 /* Connection.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

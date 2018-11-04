@@ -6,6 +6,8 @@
 //  Copyright © 2018年 NUDT. All rights reserved.
 //
 //  本文件包含AppProxyProvider类。AppProxyProvider是NEAppProxyProvider的子类，是NetworkExtension和SimpleTunnel隧道协议的连接点。
+//  @author Ainassine @2018.10
+//  基于CocoaAsyncSocket提供SOCKS5协议通信支持，抛弃原有的SimpleTunnel协议的通信过程。
 //
 
 import NetworkExtension
@@ -29,6 +31,7 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
     // MARK: NEAppProxyProvider
     let TAG = "AppProxyProvider: "
     
+    // support for socks5 communication
     var flows = [GCDAsyncSocket:NEAppProxyFlow]()
     var udpSocks = [GCDAsyncSocket: GCDAsyncUdpSocket]()
     var udpflows = [GCDAsyncUdpSocket: NEAppProxyFlow]()
