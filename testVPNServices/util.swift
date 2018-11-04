@@ -365,7 +365,7 @@ public struct Netlog {
     }
 }
 
-// MARK: for regex
+// for regex
 public struct myRegex{
     let regex: NSRegularExpression?
     
@@ -381,6 +381,38 @@ public struct myRegex{
             return false
         }
     }
+}
+
+public func checkIPFormat(ip: String) -> Bool{
+    let ipAddrPattern = "^(1\\d{2}|2[0-4]\\d|25[0-5]|[1-9]\\d|[1-9])\\.(1\\d{2}|2[0-4]\\d|25[0-5]|[1-9]\\d|\\d)\\.(1\\d{2}|2[0-4]\\d|25[0-5]|[1-9]\\d|\\d)\\.(1\\d{2}|2[0-4]\\d|25[0-5]|[1-9]\\d|\\d)$"
+    let matcher = myRegex(ipAddrPattern)
+    let testAddr = ip
+    if matcher.match(input: testAddr){
+        return true
+    }
+    
+    return false
+}
+
+// conver ip string or port string to hex format (UInt8 array)
+public func string2Hex(input: String, mod: String) -> [UInt8]{
+    var result = [UInt8]()
+    switch mod {
+    case "ip":
+        let ipSlices = input.split(separator: ".")
+        result.append(UInt8(Int(ipSlices[0])!&0xff))
+        result.append(UInt8(Int(ipSlices[1])!&0xff))
+        result.append(UInt8(Int(ipSlices[2])!&0xff))
+        result.append(UInt8(Int(ipSlices[3])!&0xff))
+    case "port":
+        let portNum = Int(input)
+        result.append(UInt8((portNum!>>8)&0xff))
+        result.append((UInt8(portNum!&0xff)))
+        
+    default:
+        return result
+    }
+    return result
 }
 
 // log

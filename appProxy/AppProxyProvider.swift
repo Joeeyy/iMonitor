@@ -28,13 +28,17 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
     /// The completion handler to call when the tunnel is fully disconnected.
     var pendingStopCompletion: ((Void) -> Void)?
     
+    /// support for socks5 communication
+    
+    // basically, for every flow, there must be a TCP connection established between this flow to SOCKS5 server tcp listener port, and we need to determine to which flow this tcp socket belongs.
+    var flows = [GCDAsyncSocket:NEAppProxyFlow]()
+    // This is built for UDP support. Every UDP flow should have a UDP session with SOCKS5 server, and due to SOCKS5 protocol, this UDP session is binded with a certain TCP connection. If this TCP connection corrupts, our UDP session will not be existing any more. This `udpSocks` is used when firstly establish a UDP session.
+    var udpSocks = [GCDAsyncSocket: GCDAsyncUdpSocket]()
+    // This is built for UDP support. We need to determine to which flow this udp socket belongs.
+    var udpflows = [GCDAsyncUdpSocket: NEAppProxyFlow]()
+    
     // MARK: NEAppProxyProvider
     let TAG = "AppProxyProvider: "
-    
-    // support for socks5 communication
-    var flows = [GCDAsyncSocket:NEAppProxyFlow]()
-    var udpSocks = [GCDAsyncSocket: GCDAsyncUdpSocket]()
-    var udpflows = [GCDAsyncUdpSocket: NEAppProxyFlow]()
 
     // begin the process of establishing the tunnel
     override func startProxy(options: [String : Any]? = nil, completionHandler: @escaping (Error?) -> Void) {
@@ -470,38 +474,6 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
     }
     
     
-    /// MARK: Utils
-    
-    open func checkIPFormat(ip: String) -> Bool{
-        let ipAddrPattern = "^(1\\d{2}|2[0-4]\\d|25[0-5]|[1-9]\\d|[1-9])\\.(1\\d{2}|2[0-4]\\d|25[0-5]|[1-9]\\d|\\d)\\.(1\\d{2}|2[0-4]\\d|25[0-5]|[1-9]\\d|\\d)\\.(1\\d{2}|2[0-4]\\d|25[0-5]|[1-9]\\d|\\d)$"
-        let matcher = myRegex(ipAddrPattern)
-        let testAddr = ip
-        if matcher.match(input: testAddr){
-            return true
-        }
-        
-        return false
-    }
-    
-    open func string2Hex(input: String, mod: String) -> [UInt8]{
-        var result = [UInt8]()
-        switch mod {
-        case "ip":
-            let ipSlices = input.split(separator: ".")
-            result.append(UInt8(Int(ipSlices[0])!&0xff))
-            result.append(UInt8(Int(ipSlices[1])!&0xff))
-            result.append(UInt8(Int(ipSlices[2])!&0xff))
-            result.append(UInt8(Int(ipSlices[3])!&0xff))
-        case "port":
-            let portNum = Int(input)
-            result.append(UInt8((portNum!>>8)&0xff))
-            result.append((UInt8(portNum!&0xff)))
-            
-        default:
-            return result
-        }
-        return result
-    }
     
     // MARK: Tunnel Delegate
     
