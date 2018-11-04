@@ -87,7 +87,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider, TunnelDelegate, ClientTunnel
     func tunnelDidOpen(_ targetTunnel: Tunnel){
         // Open the logical flow of packets through the tunnel
         let newConnection = ClientTunnelConnection(tunnel: tunnel!, clientPacketFlow: packetFlow, connectionDelegate: self)
-        newConnection.open()
+        //newConnection.open()
         tunnelConnection = newConnection
     }
     
@@ -155,45 +155,81 @@ class PacketTunnelProvider: NEPacketTunnelProvider, TunnelDelegate, ClientTunnel
     
     // create tunnel network settings to be applied to virtual interfaces
     func createTunnelSettingsFromConfiguration(_ configuration: [NSObject: AnyObject]) -> NEPacketTunnelNetworkSettings? {
+        //        let configuration =
+        //        "{DNS = {SearchDomains =         (
+        //        DHCP,
+        //        HOST
+        //        );
+        //        Servers =         (
+        //        \"202.102.152.3\",
+        //        \"202.102.154.3\"
+        //        );
+        //    };
+        //    IPv4 =     {
+        //    Address = \"10.1.1.2\";
+        //    Netmask = \"255.255.255.255\";
+        //    Routes =         (
+        //    {
+        //    Address = \"192.168.1.0\";
+        //    Netmask = \"255.255.255.0\";
+        //    }
+        //    );
+        //    };
+        //}"
         testVPNLog(self.TAG + "creating tunnel settings from configuration" )
-        guard let tunnelAddress = tunnel?.remoteHost,
-        let address = getValueFromPlist(configuration, keyArray: [.IPv4, .Address]) as? String,
-        let netmask = getValueFromPlist(configuration, keyArray: [.IPv4, .Address]) as? String
+        guard let tunnelAddress = tunnel?.remoteHost
+            //let address = getValueFromPlist(configuration, keyArray: [.IPv4, .Address]) as? String,
+            //let netmask = getValueFromPlist(configuration, keyArray: [.IPv4, .Address]) as? String
             else {return nil}
+        let address = "10.1.1.2"
+        let netmask = "255.255.255.255"
         
         let newSettings = NEPacketTunnelNetworkSettings(tunnelRemoteAddress: tunnelAddress)
         var fullTunnel = true
         
         newSettings.iPv4Settings = NEIPv4Settings(addresses: [address], subnetMasks: [netmask])
         
-        if let routes = getValueFromPlist(configuration, keyArray: [.IPv4, .Routes]) as? [[String: AnyObject]] {
-            var includedRoutes = [NEIPv4Route]()
-            
-            for route in routes {
-                if let netAddress = route[SettingsKey.Address.rawValue] as? String,
-                    let netMask = route[SettingsKey.Address.rawValue] as? String{
-                    includedRoutes.append(NEIPv4Route(destinationAddress: netAddress, subnetMask: netMask))
-                }
-            }
-            
-            newSettings.iPv4Settings?.includedRoutes = includedRoutes
-            fullTunnel = false
-        }
-        else{
-            // No route specified, use the default route
-            newSettings.iPv4Settings?.includedRoutes = [NEIPv4Route.default()]
-        }
+        /*
+         if let routes = getValueFromPlist(configuration, keyArray: [.IPv4, .Routes]) as? [[String: AnyObject]] {
+         var includedRoutes = [NEIPv4Route]()
+         
+         for route in routes {
+         if let netAddress = route[SettingsKey.Address.rawValue] as? String,
+         let netMask = route[SettingsKey.Address.rawValue] as? String{
+         includedRoutes.append(NEIPv4Route(destinationAddress: netAddress, subnetMask: netMask))
+         }
+         }
+         
+         newSettings.iPv4Settings?.includedRoutes = includedRoutes
+         fullTunnel = false
+         }
+         else{
+         // No route specified, use the default route
+         newSettings.iPv4Settings?.includedRoutes = [NEIPv4Route.default()]
+         }*/
+        var includedRoutes = [NEIPv4Route]()
+        includedRoutes.append(NEIPv4Route(destinationAddress: "192.168.1.0", subnetMask: "255.255.255.0"))
+        newSettings.iPv4Settings?.includedRoutes = includedRoutes
+        fullTunnel = false
         
-        if let DNSDictionary = configuration[SettingsKey.DNS.rawValue as NSString] as? [String: AnyObject],
-        let DNSServers = DNSDictionary[SettingsKey.Servers.rawValue] as? [String]
-        {
-            newSettings.dnsSettings = NEDNSSettings(servers: DNSServers)
-            if let DNSSearchDomains = DNSDictionary[SettingsKey.SearchDomains.rawValue] as? [String] {
-                newSettings.dnsSettings?.searchDomains = DNSSearchDomains
-                if !fullTunnel {
-                    newSettings.dnsSettings?.matchDomains = DNSSearchDomains
-                }
-            }
+        /*
+         if let DNSDictionary = configuration[SettingsKey.DNS.rawValue as NSString] as? [String: AnyObject],
+         let DNSServers = DNSDictionary[SettingsKey.Servers.rawValue] as? [String]
+         {
+         newSettings.dnsSettings = NEDNSSettings(servers: DNSServers)
+         if let DNSSearchDomains = DNSDictionary[SettingsKey.SearchDomains.rawValue] as? [String] {
+         newSettings.dnsSettings?.searchDomains = DNSSearchDomains
+         if !fullTunnel {
+         newSettings.dnsSettings?.matchDomains = DNSSearchDomains
+         }
+         }
+         }*/
+        let DNSServers = ["202.102.154.3","202.102.152.3"]
+        newSettings.dnsSettings = NEDNSSettings(servers: DNSServers)
+        let DNSSearchDomains = ["DHCP","HOST"]
+        newSettings.dnsSettings?.searchDomains = DNSSearchDomains
+        if !fullTunnel {
+            newSettings.dnsSettings?.matchDomains = DNSSearchDomains
         }
         
         newSettings.tunnelOverheadBytes = 150

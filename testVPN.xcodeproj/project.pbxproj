@@ -40,6 +40,7 @@
 		5E440AD1212D9CAD00778393 /* util.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E440AD0212D9CAD00778393 /* util.swift */; };
 		5E440AD3212DA3F600778393 /* NetworkExtension.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5E440AD2212DA3F600778393 /* NetworkExtension.framework */; };
 		5E440AD4212DA66000778393 /* NetworkExtension.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5E440AD2212DA3F600778393 /* NetworkExtension.framework */; };
+		5E52EABF2188A555009DD858 /* CocoaAsyncSocket.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5E52EABD2188A222009DD858 /* CocoaAsyncSocket.framework */; };
 		5E61941B214FC7EA00FE8C6A /* NetlogsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E61941A214FC7EA00FE8C6A /* NetlogsTableViewController.swift */; };
 		5EBD87B421312BF300918CC9 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EBD87B321312BF300918CC9 /* main.swift */; };
 		5EBD87BA21312C4000918CC9 /* AddressPool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EBD87B921312C4000918CC9 /* AddressPool.swift */; };
@@ -221,6 +222,7 @@
 		5E440AC5212D9BB700778393 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		5E440AD0212D9CAD00778393 /* util.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = util.swift; sourceTree = "<group>"; };
 		5E440AD2212DA3F600778393 /* NetworkExtension.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = NetworkExtension.framework; path = System/Library/Frameworks/NetworkExtension.framework; sourceTree = SDKROOT; };
+		5E52EABD2188A222009DD858 /* CocoaAsyncSocket.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CocoaAsyncSocket.framework; path = Carthage/Build/iOS/CocoaAsyncSocket.framework; sourceTree = "<group>"; };
 		5E61941A214FC7EA00FE8C6A /* NetlogsTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetlogsTableViewController.swift; sourceTree = "<group>"; };
 		5E71DE652154A39F005B283A /* arch.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = arch.md; sourceTree = "<group>"; };
 		5E71DE6D2158C438005B283A /* paper.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = paper.md; sourceTree = "<group>"; };
@@ -359,6 +361,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5E52EABF2188A555009DD858 /* CocoaAsyncSocket.framework in Frameworks */,
 				5ED108A1213E31C3001A6752 /* SQLite.framework in Frameworks */,
 				5E24CB4F213182A400E909D5 /* NetworkExtension.framework in Frameworks */,
 			);
@@ -473,6 +476,7 @@
 		5E4409DA212BE37C00778393 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				5E52EABD2188A222009DD858 /* CocoaAsyncSocket.framework */,
 				5ED10806213E31B6001A6752 /* Carthage */,
 				5ED10804213D64F4001A6752 /* SQLite.framework */,
 				5E440AD2212DA3F600778393 /* NetworkExtension.framework */,
@@ -1201,6 +1205,7 @@
 			);
 			inputPaths = (
 				"$(SRCROOT)/Carthage/Build/iOS/SQLite.framework",
+				"$(SRCROOT)/Carthage/Build/iOS/CocoaAsyncSocket.framework",
 			);
 			name = "Run Script";
 			outputPaths = (

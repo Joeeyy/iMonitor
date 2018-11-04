@@ -149,6 +149,17 @@ open class ClientTunnel: Tunnel {
     }
     
     /// Send a message to the tunnel server.
+    open func sendAData(data: Data, completionHandler: @escaping (Error?) -> Void) {
+        testVPNLog(self.TAG + "send a message to the tunnel server, messageProperties: \(data)")
+        /*guard let messageData = serializeMessage(messageProperties) else {
+            completionHandler(SimpleTunnelError.internalError as NSError)
+            return
+        }*/
+        
+        connection?.write(data, completionHandler: completionHandler)
+    }
+    
+    /// Send a message to the tunnel server.
     open func sendMessage(_ messageProperties: [String: AnyObject], completionHandler: @escaping (Error?) -> Void) {
         testVPNLog(self.TAG + "send a message to the tunnel server, messageProperties: \(messageProperties)")
         guard let messageData = serializeMessage(messageProperties) else {

@@ -84,7 +84,7 @@ open class Connection: NSObject {
         super.init()
         if let t = tunnel {
             // Add this connection to the tunnel's set of connections.
-            t.addConnection(self)
+            //t.addConnection(self)
         }
         
     }
@@ -101,7 +101,7 @@ open class Connection: NSObject {
         testVPNLog(self.TAG + "set new tunnel")
         tunnel = newTunnel
         if let t = tunnel {
-            t.addConnection(self)
+            //t.addConnection(self)
         }
     }
     

@@ -1,1 +1,2 @@
 github "stephencelis/SQLite.swift" ~> 0.11.5
+github "robbiehanson/CocoaAsyncSocket" "master"

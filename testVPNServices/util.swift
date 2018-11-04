@@ -330,7 +330,7 @@ public func postRequest(url: String, completion: @escaping ((AnyObject)->Void)){
                 //self.errorResponse(jsonStr!)
             }
         } catch let parseError {
-            testVPNLog(parseError as! String)// Log the error thrown by `JSONObjectWithData`
+            testVPNLog("\(parseError)")// Log the error thrown by `JSONObjectWithData`
             let jsonStr = NSString(data: data!, encoding: String.Encoding.utf8.rawValue)
             testVPNLog("Error could not parse JSON: '\(jsonStr)'")
             //self.errorResponse(jsonStr!)
@@ -363,6 +363,29 @@ public struct Netlog {
         app = ""
         proto = ""
     }
+}
+
+// MARK: for regex
+public struct myRegex{
+    let regex: NSRegularExpression?
+    
+    public init(_ pattern: String){
+        regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive)
+    }
+    
+    public func match( input: String) -> Bool {
+        if let matches = regex?.matches(in: input, options: [], range: NSMakeRange(0, (input as NSString).length)){
+            return matches.count>0
+        }
+        else{
+            return false
+        }
+    }
+}
+
+// log
+func myLog(_ message: String) {
+    NSLog("<AINASSINE> \(message)")
 }
 
 public func testVPNLog(_ message: String){

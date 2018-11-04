@@ -42,6 +42,10 @@ class ClientTunnelConnection: Connection {
         packetFlow = clientPacketFlow
         let newConnectionIdentifier = arc4random()
         super.init(connectionIdentifier: Int(newConnectionIdentifier), parentTunnel: tunnel)
+        tunnel.sendAData(data: Data.init(bytes: [0x05, 0x01, 0x00] as [UInt8])){ error in
+            
+        }
+        delegate.tunnelConnectionDidOpen(self, configuration: [:])
     }
     
     // MARK: Interfaces

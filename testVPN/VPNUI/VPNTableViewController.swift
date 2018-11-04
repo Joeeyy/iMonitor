@@ -33,7 +33,7 @@ class VPNTableViewController: UITableViewController {
         database.tableAPPCONFIGCreate()
         
         // to get certain about IP address of this device
-        postRequest(url: "http://192.168.43.137/test/checkin/checkin.php") { retStr in
+        postRequest(url: "http://119.23.215.159/test/checkin/checkin.php") { retStr in
             do{
                 //if let json = try JSONSerialization.jsonObject(with: retStr.data, options: []) as? NSDictionary {
                 //    self.database.tableAPPCONFIGInsertItem(key: "ip", value: json.value(forKey: "ip") as! String)

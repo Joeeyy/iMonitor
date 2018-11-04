@@ -323,3 +323,199 @@ setSocketNonBlocking():
 > 2. 系统服务器与app目的服务器之间的流量：server_ip:server_port <==> dst_ip:dst_port
 > 而如果除去我们的系统服务器的环节，正常化的流量应当是：client_ip:client_port <==> dst_ip:dst_port的
 
+
+
+
+服务器-客户端通信过程：
+备注：
+ASCII => Hex 表：
+command: 63 6F 6D 6D 61 6E 64
+tunnel: 74 75 6E 6E 65 6C
+-: 2D
+type: 74 79 70 65
+identifier: 69 64 65 6E 74 69 66 69 65 72
+[!注意]：57后接command，5b后接tunnel-type，5a后接identifier，5d后接identifier，5b后接result-code
+1. Client 申请建立连接
+client => server, length: 98, content: ["command": 6, "tunnel-type": 1, "identifier": 1970626148]
+    某次请求捕获数据：
+    62 00 00 00    # 数据长度，6 x 16+2 = 98 (Bytes)
+    62 70 6c 69     # b p l i
+    73 74 30 30     # s t
+    d3 01 02 03     #
+    04 05 06 57     #
+    63 6f 6d 6d     #c o m m    这里是"command"标签
+    61 6e 64 5b     #a n d
+    74 75 6e 6e     #t u n n    这里是"tunnel-type"标签
+    65 6c 2d 74     #e l - t
+    79 70 65 5a     #y p e
+    69 64 65 6e     #i d e n    这里是"identifier"标签
+    74 69 66 69     #t i f i
+    65 72 10 06     #e r    这里的06是command的数值6(.open)的hex数值
+    10 01 12 75     #   这里01是tunnel-type的数值1的hex数值，这里75755e64是identifier的数值197026148的hex数值
+    75 5e 64 08     #
+    0f 17 23 2e     #
+    30 32 00 00     #
+    00 00 00 00     #
+    01 01 00 00     #
+    00 00 00 00     #
+    00 07 00 00     #
+    00 00 00 00     #
+    00 00 00 00     #
+    00 00 00 00     #
+    00 37               #
+2. Server回复Client的请求：(成功建立连接)
+server => client, length: 94, content: ["command": 7, "configuration": {}, "result-code": 0, "identifier": 785859586]
+62706c69 73743030 d4010203 04050607: #注意最后一位是07，与第一步骤中57不同 
+1f
+5b
+7265 73756c74 2d636f64 65 : #result-code的hex
+57
+636f 6d6d616e 64    #command的hex
+5d
+636f 6e666967 75726174 696f6e   #configuration的hex
+5a
+6964656e 74696669 6572  #identifier的hex
+10
+00  # result-code：0，success
+10
+07  # command：7
+d208
+090a1654
+49507634    #IPv4
+53
+444e53  #DNS
+d30b0c0d
+0e0f1057
+4e65746d 61736b #Netmask
+57
+41646472 657373 #Address
+56
+526f7574 6573   #Routes
+5f10
+0f
+323535 2e323535 2e323535 2e323535   # 255.255.255.255
+58
+31302e 312e312e 32  # 10.1.1.2
+a111d2
+12131415
+57
+4e6574 6d61736b # Netmask
+57
+416464 72657373 #Address
+5d
+323535 2e323535 2e323535 2e30   # 255.255.255.0
+5b
+31 39322e31 36382e31 2e30   # 192.168.1.0
+d217
+18191c
+57
+53657276 657273 #Servers
+5d
+53656172 6368446f 6d61696e 73   # searchDomains
+a21a1b
+5d
+323032 2e313032 2e313532 2e33   # 202.102.152.3
+5d
+32 30322e31 30322e31 35342e33   # 202.102.154.3
+a21d1e54
+44484350    # DHCP
+54
+484f53 54   # HOST
+12
+2ed7 4402   #785859586的hex
+0008
+0011001d
+00250033
+003e0040
+00420047
+004c0050
+0057005f
+0067006e
+00800089
+008b0090
+009800a0
+00ae00ba
+00bf00c7
+00d500d8
+00e600f4
+00f700fc
+01010000
+00000000
+02010000
+00000000
+00200000
+00000000
+00000000
+00000000
+0106
+
+
+
+
+建立起连接的通话：
+```
+默认    18:21:03.870238 +0800    packetTunnel    <AINASSINE> PacketTunnelProvider: starting VPN Tunnel.
+默认    18:21:03.870500 +0800    packetTunnel    <AINASSINE> Tunnel: initializing tunnel
+默认    18:21:03.870703 +0800    packetTunnel    <AINASSINE> ClientTunnel: starting tunnel
+默认    18:21:03.872027 +0800    packetTunnel    <AINASSINE> ClientTunnel: observe changes to the tunnel connection state
+默认    18:21:03.874995 +0800    packetTunnel    <AINASSINE> ClientTunnel: Tunnel connection state changed to Connecting
+默认    18:21:03.927902 +0800    packetTunnel    <AINASSINE> Database: update record of key: localPort failed. no such record with that key.
+默认    18:21:03.927998 +0800    packetTunnel    <AINASSINE> ClientTunnel: reading next packet
+默认    18:21:03.928095 +0800    packetTunnel    <AINASSINE> ClientTunnelConnection: initializing ClientTunnelConnection
+默认    18:21:03.928187 +0800    packetTunnel    <AINASSINE> Connection: init connection
+默认    18:21:03.928279 +0800    packetTunnel    <AINASSINE> Tunnel: adding connection
+默认    18:21:03.928377 +0800    packetTunnel    <AINASSINE> ClientTunnelConnection: open the connection by sending an open connection message
+默认    18:21:03.928469 +0800    packetTunnel    <AINASSINE> ClientTunnel: send a message to the tunnel server, messageProperties: ["identifier": 785859586, "command": 6, "tunnel-type": 1]
+默认    18:21:03.928548 +0800    packetTunnel    <AINASSINE> Tunnel: serialize message
+默认    18:21:03.928666 +0800    packetTunnel    <AINASSINE> Tunnel: serialized message content(Optional(98)): Optional(<62000000 62706c69 73743030 d3010203 0405065a 6964656e 74696669 65725763 6f6d6d61 6e645b74 756e6e65 6c2d7479 7065122e d7440210 06100108 0f1a222e 33350000 00000000 01010000 00000000 00070000 00000000 00000000 00000000 0037>)
+默认    18:21:03.929646 +0800    packetTunnel    <AINASSINE> Tunnel: handle packet, process a message payload. content(358): <62706c69 73743030 d4010203 04050607 1f5b7265 73756c74 2d636f64 6557636f 6d6d616e 645d636f 6e666967 75726174 696f6e5a 6964656e 74696669 65721000 1007d208 090a1654 49507634 53444e53 d30b0c0d 0e0f1057 4e65746d 61736b57 41646472 65737356 526f7574 65735f10 0f323535 2e323535 2e323535 2e323535 5831302e 312e312e 32a111d2 12131415 574e6574 6d61736b 57416464 72657373 5d323535 2e323535 2e323535 2e305b31 39322e31 36382e31 2e30d217 18191c57 53657276 6572735d 53656172 6368446f 6d61696e 73a21a1b 5d323032 2e313032 2e313532 2e335d32 30322e31 30322e31 35342e33 a21d1e54 44484350 54484f53 54122ed7 44020008 0011001d 00250033 003e0040 00420047 004c0050 0057005f 0067006e 00800089 008b0090 009800a0 00ae00ba 00bf00c7 00d500d8 00e600f4 00f700fc 01010000 00000000 02010000 00000000 00200000 00000000 00000000 00000000 0106>
+默认    18:21:03.929781 +0800    packetTunnel    <AINASSINE> Tunnel: properties received: ["command": 7, "configuration": {
+DNS =     {
+SearchDomains =         (
+DHCP,
+HOST
+);
+Servers =         (
+"202.102.152.3",
+"202.102.154.3"
+);
+};
+IPv4 =     {
+Address = "10.1.1.2";
+Netmask = "255.255.255.255";
+Routes =         (
+{
+Address = "192.168.1.0";
+Netmask = "255.255.255.0";
+}
+);
+};
+}, "result-code": 0, "identifier": 785859586]
+默认    18:21:03.929879 +0800    packetTunnel    <AINASSINE> ClientTunnel: handle message received from the tunnel server, commandType: OpenResult, properties: ["command": 7, "configuration": {
+DNS =     {
+SearchDomains =         (
+DHCP,
+HOST
+);
+Servers =         (
+"202.102.152.3",
+"202.102.154.3"
+);
+};
+IPv4 =     {
+Address = "10.1.1.2";
+Netmask = "255.255.255.255";
+Routes =         (
+{
+Address = "192.168.1.0";
+Netmask = "255.255.255.0";
+}
+);
+};
+}, "result-code": 0, "identifier": 785859586]
+默认    18:21:03.929987 +0800    packetTunnel    <AINASSINE> ClientTunnelConnection: handling the event of the connection being established
+默认    18:21:03.930135 +0800    packetTunnel    <AINASSINE> PacketTunnelProvider: tunnelConnectionDidOpen, going to set settings for it.
+默认    18:21:03.930238 +0800    packetTunnel    <AINASSINE> PacketTunnelProvider: creating tunnel settings from configuration
+默认    18:21:03.930584 +0800    packetTunnel    <AINASSINE> ClientTunnel: reading next packet
+默认    18:21:04.080967 +0800    packetTunnel    <AINASSINE> ClientTunnelConnection: Make the initial readPacketsWithCompletionHandler call
+```
