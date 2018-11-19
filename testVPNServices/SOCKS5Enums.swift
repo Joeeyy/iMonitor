@@ -13,10 +13,10 @@
 import Foundation
 
 /// socks5 protocol version: by default is version 5
-public let SOCKS5_VER = 0x05
+public let SOCKS5_VER = 0x05 as UInt8
 
 /// socks5 protocol reserved byte
-public let SOCKS5_RSV = 0x00
+public let SOCKS5_RSV = 0x00 as UInt8
 
 /// possible authentication methods for socks5 protocol
 public enum SOCKS5_AUTH_METHOD: UInt8 {

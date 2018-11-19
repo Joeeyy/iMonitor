@@ -296,7 +296,10 @@ class ClientAppProxyUDPConnection : ClientAppProxyConnection {
                 let readEndpoints = remoteEndPoints
                 , readError == nil else
             {
-                testVPNLog("Failed to read data from the UDP flow. error = \(readError)")
+                testVPNLog("Failed to read data from the UDP flow. ")
+                if readError != nil {
+                    testVPNLog("\(readError)")
+                }
                 self.handleErrorCondition(.peerReset)
                 return
             }

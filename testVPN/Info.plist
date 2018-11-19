@@ -6,8 +6,10 @@
 	<dict>
 		<key>12DDB7F7-C529-497E-AB79-B02870741EC4</key>
 		<array>
-			<string>com.tencent.xin</string>
 			<string>cn.edu.nudt.MakePost</string>
+			<string>com.tencent.xin</string>
+			<string>cn.edu.nudt.MakeUDPRequest</string>
+			<string>com.tencent.mQQi</string>
 		</array>
 	</dict>
 	<key>CFBundleDevelopmentRegion</key>

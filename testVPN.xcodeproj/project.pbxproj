@@ -184,6 +184,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		5E11DE3A21915CFB0010A3AE /* crash.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = crash.md; sourceTree = "<group>"; };
 		5E19A509214CE16200D2C358 /* SwitchTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchTableViewCell.swift; sourceTree = "<group>"; };
 		5E19A50B214CE17000D2C358 /* NameValueTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NameValueTableViewCell.swift; sourceTree = "<group>"; };
 		5E19A50D214CE1F700D2C358 /* NetlogTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetlogTableViewCell.swift; sourceTree = "<group>"; };
@@ -430,6 +431,7 @@
 		5E4409BB212BE35000778393 = {
 			isa = PBXGroup;
 			children = (
+				5E11DE3A21915CFB0010A3AE /* crash.md */,
 				5E71DE6E2158C45B005B283A /* TODO.md */,
 				5E71DE6D2158C438005B283A /* paper.md */,
 				5E71DE652154A39F005B283A /* arch.md */,

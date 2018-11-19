@@ -205,7 +205,7 @@ open class ClientTunnel: Tunnel {
             }
             
             // Start reading messages from the tunnel connection.
-            readNextPacket()
+            //readNextPacket()
             
             // Let the delegate know that the tunnel is open
             delegate?.tunnelDidOpen(self)
