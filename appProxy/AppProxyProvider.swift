@@ -55,6 +55,8 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
     
     let queue = DispatchQueue.init(label: "PerAppProxy")
     
+    var database: Database!
+    
     // basically, for every flow, there must be a TCP connection established between this flow to SOCKS5 server tcp listener port, and we need to determine to which flow this tcp socket belongs.
     var flows = [GCDAsyncSocket:NEAppProxyFlow]()
     // This is built for UDP support. Every UDP flow should have a UDP session with SOCKS5 server, and due to SOCKS5 protocol, this UDP session is binded with a certain TCP connection. If this TCP connection corrupts, our UDP session will not be existing any more. This `udpSocks` is used when firstly establish a UDP session.
@@ -75,6 +77,7 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
         testVPNLog(self.TAG + "starting PER_APP_PROXY tunnel")
         let newTunnel = ClientTunnel()
         newTunnel.delegate = self
+        database = Database()
         
         if let error = newTunnel.startTunnel(self) {
             completionHandler(error as NSError)
@@ -102,6 +105,9 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
         
         testVPNLog(self.TAG + "PER_APP_VPN stopped.")
     }
+    /*
+     self.database.tableNETWORKFLOWLOGInsertItem(srcIP: currentIP!, srcPort: currentPort!, dstIP: (self.TCPFlow.remoteEndpoint as! NWHostEndpoint).hostname, dstPort: (self.TCPFlow.remoteEndpoint as! NWHostEndpoint).port, length: readData.count, proto: "TCP", time: getTime(), app: self.TCPFlow.metaData.sourceAppSigningIdentifier, direction: "out")
+     */
     
     // Handle a new flow of network data created by an application
     override func handleNewFlow(_ flow: NEAppProxyFlow) -> Bool {
@@ -231,6 +237,7 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                     testVPNLog(self.TAG + "going to write data to sock: \(NSMutableData.init(data: readData))")
                     sock.write(readData, withTimeout: TimeInterval(-1), tag: SOCK_TAG.DATA.rawValue)
                     sock.readData(withTimeout: TimeInterval(-1), tag: 0)
+                    self.database.tableNETWORKFLOWLOGInsertItem(srcIP: sock.localHost!, srcPort: "\(sock.localPort)", dstIP: (TCPFlow.remoteEndpoint as! NWHostEndpoint).hostname, dstPort: (TCPFlow.remoteEndpoint as! NWHostEndpoint).port, length: readData.count, proto: "TCP", time: getTime(), app: TCPFlow.metaData.sourceAppSigningIdentifier, direction: "out")
                 }
             }
         }
@@ -412,6 +419,8 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                     testVPNLog(self.TAG + "going to write data to sock: \(NSMutableData.init(data: readData))")
                     sock.write(readData, withTimeout: TimeInterval(-1), tag: SOCK_TAG.DATA.rawValue)
                     sock.readData(withTimeout: TimeInterval(-1), tag: 0)
+                    
+                    self.database.tableNETWORKFLOWLOGInsertItem(srcIP: sock.localHost!, srcPort: "\(sock.localPort)", dstIP: (TCPFlow.remoteEndpoint as! NWHostEndpoint).hostname, dstPort: (TCPFlow.remoteEndpoint as! NWHostEndpoint).port, length: readData.count, proto: "TCP", time: getTime(), app: TCPFlow.metaData.sourceAppSigningIdentifier, direction: "out")
                 }
             }
             else if let UDPFlow = flows[sock] as? NEAppProxyUDPFlow {
@@ -473,6 +482,7 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                         self.closeSock(sock, forFlow: TCPFlow, reason: "Error happened while writing data back to app: \(error)")
                         return 
                     }
+                    self.database.tableNETWORKFLOWLOGInsertItem(srcIP: (TCPFlow.remoteEndpoint as! NWHostEndpoint).hostname, srcPort: (TCPFlow.remoteEndpoint as! NWHostEndpoint).port, dstIP: sock.localHost!, dstPort: "\(sock.localPort)", length: data.count, proto: "TCP", time: getTime(), app: TCPFlow.metaData.sourceAppSigningIdentifier, direction: "in")
                     sock.readData(withTimeout: TimeInterval(-1), tag: 0)
                 }
             }
@@ -584,6 +594,8 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                 payload += portHex
                 payload += data
                 
+                
+                self.database.tableNETWORKFLOWLOGInsertItem(srcIP: sock.localHost()!, srcPort: "\(sock.localPort)", dstIP: endpoint.hostname, dstPort: endpoint.port, length: datagram.count, proto: "UDP", time: getTime(), app: UDPFlow.metaData.sourceAppSigningIdentifier, direction: "out")
                 sock.send(Data.init(bytes: payload), withTimeout: TimeInterval(-1), tag: 0)
                 //sock.send(Data.init(bytes: payload), toHost: sock.connectedHost()!, port: sock.connectedPort(), withTimeout: TimeInterval(-1), tag: 0)
             }
@@ -662,6 +674,7 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                 payload += portHex
                 payload += data
                 
+                self.database.tableNETWORKFLOWLOGInsertItem(srcIP: sock.localHost()!, srcPort: "\(sock.localPort)", dstIP: endpoint.hostname, dstPort: endpoint.port, length: datagram.count, proto: "UDP", time: getTime(), app: UDPFlow!.metaData.sourceAppSigningIdentifier, direction: "out")
                 sock.send(Data.init(bytes: payload), withTimeout: TimeInterval(-1), tag: 0)
                 //sock.send(Data.init(bytes: payload), toHost: sock.connectedHost()!, port: sock.connectedPort(), withTimeout: TimeInterval(-1), tag: 0)
             }
@@ -719,6 +732,8 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
         let endpoint = [ NWHostEndpoint(hostname: "\(udpIPHex[0]).\(udpIPHex[1]).\(udpIPHex[2]).\(udpIPHex[3])", port: "\(udpPort)") ]
         //let endpoint = [ NWHostEndpoint(hostname: sock.connectedHost()!, port: "\(sock.connectedPort())") ]
         testVPNLog("sent by \(endpoint)")
+        
+        self.database.tableNETWORKFLOWLOGInsertItem(srcIP: endpoint[0].hostname, srcPort: endpoint[0].port, dstIP: sock.localHost()!, dstPort: "\(sock.localPort())", length: datagram[0].count, proto: "UDP", time: getTime(), app: flow.metaData.sourceAppSigningIdentifier, direction: "in")
         
         flow.writeDatagrams(datagram, sentBy: endpoint) { error in
             if error != nil {

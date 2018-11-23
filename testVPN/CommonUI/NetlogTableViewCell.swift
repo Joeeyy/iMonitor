@@ -20,14 +20,16 @@ class NetlogTableViewCell: UITableViewCell {
     @IBOutlet weak var directionLabel: UILabel!
     // address label
     @IBOutlet weak var addressLabel: UILabel!
-    // protocol label
-    @IBOutlet weak var protocolLabel: UILabel!
     // length label
     @IBOutlet weak var lengthLabel: UILabel!
     // time label
     @IBOutlet weak var timeLabel: UILabel!
     // app label
     @IBOutlet weak var appLabel: UILabel!
+    // id label
+    @IBOutlet weak var idLabel: UILabel!
+    // protocol label
+    @IBOutlet weak var protocolLabel: UILabel!
     
     override func awakeFromNib() {
         super.awakeFromNib()

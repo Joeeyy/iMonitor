@@ -49,9 +49,18 @@ class NetlogsTableViewController: UITableViewController {
         let log = logs[indexPath.row]
         cell.timeLabel.text = log.time
         cell.lengthLabel.text = "\(log.length) B"
-        cell.protocolLabel.text = log.proto
         cell.directionLabel.text = log.direction
         cell.appLabel.text = log.app
+        cell.protocolLabel.text = log.proto
+        cell.idLabel.text = "\(log.id)"
+        switch log.proto {
+        case "UDP":
+            cell.protocolLabel.backgroundColor = UIColor.cyan
+        case "TCP":
+            cell.protocolLabel.backgroundColor = UIColor.yellow
+        default:
+            cell.backgroundColor = UIColor.clear
+        }
         switch log.direction {
         case "out":
             cell.directionLabel.text = "To"

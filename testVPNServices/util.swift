@@ -252,7 +252,7 @@ public func getTime() -> String{
     var ret_time: String
     let date = Date()
     let timeFormatter = DateFormatter()
-    timeFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSSSSS"
+    timeFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
     ret_time = timeFormatter.string(from: date)
     
     return ret_time
