@@ -27,7 +27,6 @@
 		5E24CB4E213181E000E909D5 /* ClientAppProxyConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E24CB4D213181E000E909D5 /* ClientAppProxyConnection.swift */; };
 		5E24CB4F213182A400E909D5 /* NetworkExtension.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5E440AD2212DA3F600778393 /* NetworkExtension.framework */; };
 		5E4409C8212BE35000778393 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E4409C7212BE35000778393 /* AppDelegate.swift */; };
-		5E4409CA212BE35000778393 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E4409C9212BE35000778393 /* ViewController.swift */; };
 		5E4409CD212BE35000778393 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 5E4409CB212BE35000778393 /* Main.storyboard */; };
 		5E4409CF212BE35200778393 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5E4409CE212BE35200778393 /* Assets.xcassets */; };
 		5E4409D2212BE35200778393 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 5E4409D0212BE35200778393 /* LaunchScreen.storyboard */; };
@@ -42,6 +41,7 @@
 		5E440AD4212DA66000778393 /* NetworkExtension.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5E440AD2212DA3F600778393 /* NetworkExtension.framework */; };
 		5E52EABF2188A555009DD858 /* CocoaAsyncSocket.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5E52EABD2188A222009DD858 /* CocoaAsyncSocket.framework */; };
 		5E61941B214FC7EA00FE8C6A /* NetlogsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E61941A214FC7EA00FE8C6A /* NetlogsTableViewController.swift */; };
+		5E6FA3FA21AE53960001DEF2 /* SQLite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5ED10894213E31B6001A6752 /* SQLite.framework */; };
 		5E815393218ED1DE003F4163 /* SOCKS5Enums.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E815392218ED1DE003F4163 /* SOCKS5Enums.swift */; };
 		5EBD87B421312BF300918CC9 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EBD87B321312BF300918CC9 /* main.swift */; };
 		5EBD87BA21312C4000918CC9 /* AddressPool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EBD87B921312C4000918CC9 /* AddressPool.swift */; };
@@ -205,7 +205,6 @@
 		5E24CB4D213181E000E909D5 /* ClientAppProxyConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientAppProxyConnection.swift; sourceTree = "<group>"; };
 		5E4409C4212BE35000778393 /* testVPN.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = testVPN.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5E4409C7212BE35000778393 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		5E4409C9212BE35000778393 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		5E4409CC212BE35000778393 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		5E4409CE212BE35200778393 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		5E4409D1212BE35200778393 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -382,6 +381,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5E6FA3FA21AE53960001DEF2 /* SQLite.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -467,7 +467,6 @@
 				5E19A4FF214CDEB300D2C358 /* PerAppProxyUI */,
 				5E4409D9212BE35900778393 /* testVPN.entitlements */,
 				5E4409C7212BE35000778393 /* AppDelegate.swift */,
-				5E4409C9212BE35000778393 /* ViewController.swift */,
 				5E4409CB212BE35000778393 /* Main.storyboard */,
 				5E4409CE212BE35200778393 /* Assets.xcassets */,
 				5E4409D0212BE35200778393 /* LaunchScreen.storyboard */,
@@ -1237,7 +1236,6 @@
 				5E19A524214E3AC000D2C358 /* utils.swift in Sources */,
 				5ED107FC213D5031001A6752 /* Database.swift in Sources */,
 				5E19A50A214CE16200D2C358 /* SwitchTableViewCell.swift in Sources */,
-				5E4409CA212BE35000778393 /* ViewController.swift in Sources */,
 				5E19A520214E329700D2C358 /* VPNDetailTableViewController.swift in Sources */,
 				5E19A518214CE2EF00D2C358 /* PerAppProxyConfigurationTableViewController.swift in Sources */,
 				5E4409C8212BE35000778393 /* AppDelegate.swift in Sources */,
