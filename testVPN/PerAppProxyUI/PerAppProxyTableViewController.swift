@@ -137,10 +137,10 @@ class PerAppProxyTableViewController: UITableViewController {
                     cell.toggle.isOn = false
                 }else if self.targetAppProxy.connection.status == .disconnecting{
                     cell.startLabel.text = "Disconnecting"
-                    cell.toggle.isOn = true
+                    cell.toggle.isOn = false
                 }else if self.targetAppProxy.connection.status == .connecting{
                     cell.startLabel.text = "Connecting"
-                    cell.toggle.isOn = false
+                    cell.toggle.isOn = true
                 }
             })
             self.tableView.reloadData()
@@ -160,6 +160,15 @@ class PerAppProxyTableViewController: UITableViewController {
                 try session.startTunnel(options: nil)
             }
             catch {
+                
+            }
+        }
+        else if targetAppProxy.connection.status == .connecting {
+            let session = self.targetAppProxy.connection as! NETunnelProviderSession
+            do{
+                try session.stopTunnel()
+            }
+            catch{
                 
             }
         }
