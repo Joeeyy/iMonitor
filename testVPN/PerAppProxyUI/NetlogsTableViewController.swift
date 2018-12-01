@@ -52,7 +52,7 @@ class NetlogsTableViewController: UITableViewController {
         cell.directionLabel.text = log.direction
         cell.appLabel.text = log.app
         cell.protocolLabel.text = log.proto
-        cell.idLabel.text = "\(log.id)"
+        cell.idLabel.text = "# \(log.id)"
         switch log.proto {
         case "UDP":
             cell.protocolLabel.backgroundColor = UIColor.cyan
