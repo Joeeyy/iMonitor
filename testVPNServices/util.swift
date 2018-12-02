@@ -258,6 +258,13 @@ public func getTime() -> String{
     return ret_time
 }
 
+public func toJSONString(dict:NSDictionary?) -> String{
+    let data = try? JSONSerialization.data(withJSONObject: dict!, options: JSONSerialization.WritingOptions.prettyPrinted)
+    let strJson = NSString(data: data!, encoding: String.Encoding.utf8.rawValue)
+    
+    return strJson! as String
+}
+
 // get local ip
 public func getIFAddresses() -> [String] {
     var addresses = [String]()
@@ -293,23 +300,17 @@ public func getIFAddresses() -> [String] {
 }
 
 // make post
-public func postRequest(url: String, completion: @escaping ((AnyObject)->Void)){
+public func postRequest(url: String, jsonData: NSData?, completion: @escaping ((AnyObject)->Void)){
     
     let sessionConfig = URLSessionConfiguration.default
     sessionConfig.timeoutIntervalForRequest = 5.0
     sessionConfig.timeoutIntervalForResource = 5.0
     let session : URLSession = URLSession(configuration: sessionConfig)
     let url : NSURL = NSURL(string: url)!
-    let params: NSMutableDictionary = NSMutableDictionary()
-    params["imei"] = "1234567890x"
-    var jsonData:NSData? = nil
-    do {
-        jsonData  = try JSONSerialization.data(withJSONObject: params, options:JSONSerialization.WritingOptions.prettyPrinted) as NSData
-    } catch {
-    }
+    
     let request: NSMutableURLRequest = NSMutableURLRequest(url : url as URL)
     request.httpMethod = "POST"
-    request.httpBody = jsonData! as Data
+    request.httpBody = jsonData as! Data
     let dataTask: URLSessionDataTask = session.dataTask(with: request as URLRequest) { (data, response, error) in
         guard data != nil else {
             testVPNLog("Make post has no response.")

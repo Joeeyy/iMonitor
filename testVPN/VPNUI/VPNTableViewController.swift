@@ -13,6 +13,7 @@
 import UIKit
 import NetworkExtension
 import testVPNServices
+import AdSupport
 
 class VPNTableViewController: UITableViewController {
     
@@ -33,7 +34,17 @@ class VPNTableViewController: UITableViewController {
         database.tableAPPCONFIGCreate()
         
         // to get certain about IP address of this device
-        postRequest(url: "http://119.23.215.159/test/checkin/checkin.php") { retStr in
+        let idfa = ASIdentifierManager.shared()?.advertisingIdentifier
+        
+        let params: NSMutableDictionary = NSMutableDictionary()
+        params["idfa"] = idfa?.uuidString
+        var jsonData:NSData? = nil
+        do {
+            jsonData  = try JSONSerialization.data(withJSONObject: params, options:JSONSerialization.WritingOptions.prettyPrinted) as NSData
+        } catch {
+        }
+        
+        postRequest(url: "http://119.23.215.159/test/checkin/checkin.php", jsonData: jsonData) { retStr in
             do{
                 //if let json = try JSONSerialization.jsonObject(with: retStr.data, options: []) as? NSDictionary {
                 //    self.database.tableAPPCONFIGInsertItem(key: "ip", value: json.value(forKey: "ip") as! String)

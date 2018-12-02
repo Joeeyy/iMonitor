@@ -2,16 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>NETestAppMapping</key>
-	<dict>
-		<key>12DDB7F7-C529-497E-AB79-B02870741EC4</key>
-		<array>
-			<string>cn.edu.nudt.MakePost</string>
-			<string>com.tencent.xin</string>
-			<string>cn.edu.nudt.MakeUDPRequest</string>
-			<string>com.tencent.mQQi</string>
-		</array>
-	</dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleExecutable</key>
@@ -30,6 +20,31 @@
 	<string>1</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NETestAppMapping</key>
+	<dict>
+		<key>12DDB7F7-C529-497E-AB79-B02870741EC4</key>
+		<array>
+			<string>cn.edu.nudt.MakePost</string>
+			<string>com.tencent.xin</string>
+			<string>cn.edu.nudt.MakeUDPRequest</string>
+			<string>com.tencent.mQQi</string>
+		</array>
+	</dict>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string></string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string></string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string></string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

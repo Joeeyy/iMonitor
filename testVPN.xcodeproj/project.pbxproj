@@ -43,6 +43,16 @@
 		5E61941B214FC7EA00FE8C6A /* NetlogsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E61941A214FC7EA00FE8C6A /* NetlogsTableViewController.swift */; };
 		5E6FA3FA21AE53960001DEF2 /* SQLite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5ED10894213E31B6001A6752 /* SQLite.framework */; };
 		5E815393218ED1DE003F4163 /* SOCKS5Enums.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E815392218ED1DE003F4163 /* SOCKS5Enums.swift */; };
+		5E98A04721B3EA3D0002B1B4 /* locationTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E98A04621B3EA3D0002B1B4 /* locationTracker.swift */; };
+		5EB87C2021B2B7DE007B94DD /* BMKLocationKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5EB87C1821B2B7DE007B94DD /* BMKLocationKit.framework */; };
+		5EB87C2221B2B817007B94DD /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5EB87C2121B2B817007B94DD /* CoreLocation.framework */; };
+		5EB87C2421B2B84D007B94DD /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5EB87C2321B2B84D007B94DD /* SystemConfiguration.framework */; };
+		5EB87C2621B2B857007B94DD /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5EB87C2521B2B857007B94DD /* Security.framework */; };
+		5EB87C2821B2B869007B94DD /* libsqlite3.0.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 5EB87C2721B2B869007B94DD /* libsqlite3.0.tbd */; };
+		5EB87C2A21B2B876007B94DD /* CoreTelephony.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5EB87C2921B2B875007B94DD /* CoreTelephony.framework */; };
+		5EB87C2C21B2B892007B94DD /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 5EB87C2B21B2B892007B94DD /* libc++.tbd */; };
+		5EB87C2E21B2B89E007B94DD /* AdSupport.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5EB87C2D21B2B89E007B94DD /* AdSupport.framework */; };
+		5EB87C3521B2BF84007B94DD /* TableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EB87C3421B2BF84007B94DD /* TableViewController.swift */; };
 		5EBD87B421312BF300918CC9 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EBD87B321312BF300918CC9 /* main.swift */; };
 		5EBD87BA21312C4000918CC9 /* AddressPool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EBD87B921312C4000918CC9 /* AddressPool.swift */; };
 		5EBD87BC21312C5400918CC9 /* ServerConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EBD87BB21312C5400918CC9 /* ServerConfiguration.swift */; };
@@ -229,6 +239,17 @@
 		5E71DE6D2158C438005B283A /* paper.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = paper.md; sourceTree = "<group>"; };
 		5E71DE6E2158C45B005B283A /* TODO.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = TODO.md; sourceTree = "<group>"; };
 		5E815392218ED1DE003F4163 /* SOCKS5Enums.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SOCKS5Enums.swift; sourceTree = "<group>"; };
+		5E98A04621B3EA3D0002B1B4 /* locationTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = locationTracker.swift; sourceTree = "<group>"; };
+		5EB87C1821B2B7DE007B94DD /* BMKLocationKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = BMKLocationKit.framework; sourceTree = "<group>"; };
+		5EB87C2121B2B817007B94DD /* CoreLocation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreLocation.framework; path = System/Library/Frameworks/CoreLocation.framework; sourceTree = SDKROOT; };
+		5EB87C2321B2B84D007B94DD /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
+		5EB87C2521B2B857007B94DD /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		5EB87C2721B2B869007B94DD /* libsqlite3.0.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.0.tbd; path = usr/lib/libsqlite3.0.tbd; sourceTree = SDKROOT; };
+		5EB87C2921B2B875007B94DD /* CoreTelephony.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreTelephony.framework; path = System/Library/Frameworks/CoreTelephony.framework; sourceTree = SDKROOT; };
+		5EB87C2B21B2B892007B94DD /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "usr/lib/libc++.tbd"; sourceTree = SDKROOT; };
+		5EB87C2D21B2B89E007B94DD /* AdSupport.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AdSupport.framework; path = System/Library/Frameworks/AdSupport.framework; sourceTree = SDKROOT; };
+		5EB87C3021B2BAB8007B94DD /* BMKSwiftDemo-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "BMKSwiftDemo-Bridging-Header.h"; sourceTree = "<group>"; };
+		5EB87C3421B2BF84007B94DD /* TableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableViewController.swift; sourceTree = "<group>"; };
 		5EBD87B121312BF300918CC9 /* tunnel_server */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tunnel_server; sourceTree = BUILT_PRODUCTS_DIR; };
 		5EBD87B321312BF300918CC9 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		5EBD87B821312C2F00918CC9 /* config.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = config.plist; sourceTree = "<group>"; };
@@ -354,6 +375,14 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5EB87C2E21B2B89E007B94DD /* AdSupport.framework in Frameworks */,
+				5EB87C2C21B2B892007B94DD /* libc++.tbd in Frameworks */,
+				5EB87C2A21B2B876007B94DD /* CoreTelephony.framework in Frameworks */,
+				5EB87C2821B2B869007B94DD /* libsqlite3.0.tbd in Frameworks */,
+				5EB87C2621B2B857007B94DD /* Security.framework in Frameworks */,
+				5EB87C2421B2B84D007B94DD /* SystemConfiguration.framework in Frameworks */,
+				5EB87C2221B2B817007B94DD /* CoreLocation.framework in Frameworks */,
+				5EB87C2021B2B7DE007B94DD /* BMKLocationKit.framework in Frameworks */,
 				5ED10805213D64F4001A6752 /* SQLite.framework in Frameworks */,
 				5E440AD3212DA3F600778393 /* NetworkExtension.framework in Frameworks */,
 			);
@@ -436,6 +465,7 @@
 				5E71DE6D2158C438005B283A /* paper.md */,
 				5E71DE652154A39F005B283A /* arch.md */,
 				5E222C8C212FF3CE006FC341 /* README.md */,
+				5EB87C2F21B2BA9B007B94DD /* BDLocation */,
 				5ED108A3213E39D0001A6752 /* Database */,
 				5E4409C6212BE35000778393 /* testVPN */,
 				5E440A66212D94C000778393 /* appProxy */,
@@ -472,6 +502,7 @@
 				5E4409D0212BE35200778393 /* LaunchScreen.storyboard */,
 				5E4409D3212BE35200778393 /* Info.plist */,
 				5E19A523214E3AC000D2C358 /* utils.swift */,
+				5EB87C3421B2BF84007B94DD /* TableViewController.swift */,
 			);
 			path = testVPN;
 			sourceTree = "<group>";
@@ -479,6 +510,14 @@
 		5E4409DA212BE37C00778393 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				5EB87C2D21B2B89E007B94DD /* AdSupport.framework */,
+				5EB87C2B21B2B892007B94DD /* libc++.tbd */,
+				5EB87C2921B2B875007B94DD /* CoreTelephony.framework */,
+				5EB87C2721B2B869007B94DD /* libsqlite3.0.tbd */,
+				5EB87C2521B2B857007B94DD /* Security.framework */,
+				5EB87C2321B2B84D007B94DD /* SystemConfiguration.framework */,
+				5EB87C2121B2B817007B94DD /* CoreLocation.framework */,
+				5EB87C1821B2B7DE007B94DD /* BMKLocationKit.framework */,
 				5E52EABD2188A222009DD858 /* CocoaAsyncSocket.framework */,
 				5ED10806213E31B6001A6752 /* Carthage */,
 				5ED10804213D64F4001A6752 /* SQLite.framework */,
@@ -522,6 +561,15 @@
 				5E815392218ED1DE003F4163 /* SOCKS5Enums.swift */,
 			);
 			path = testVPNServices;
+			sourceTree = "<group>";
+		};
+		5EB87C2F21B2BA9B007B94DD /* BDLocation */ = {
+			isa = PBXGroup;
+			children = (
+				5EB87C3021B2BAB8007B94DD /* BMKSwiftDemo-Bridging-Header.h */,
+				5E98A04621B3EA3D0002B1B4 /* locationTracker.swift */,
+			);
+			path = BDLocation;
 			sourceTree = "<group>";
 		};
 		5EBD87B221312BF300918CC9 /* tunnel_server */ = {
@@ -1023,6 +1071,9 @@
 							com.apple.ApplicationGroups.iOS = {
 								enabled = 1;
 							};
+							com.apple.BackgroundModes = {
+								enabled = 1;
+							};
 							com.apple.Keychain = {
 								enabled = 1;
 							};
@@ -1233,9 +1284,11 @@
 				5E19A51A214CE84300D2C358 /* ButtonTableViewCell.swift in Sources */,
 				5E61941B214FC7EA00FE8C6A /* NetlogsTableViewController.swift in Sources */,
 				5E19A50E214CE1F700D2C358 /* NetlogTableViewCell.swift in Sources */,
+				5E98A04721B3EA3D0002B1B4 /* locationTracker.swift in Sources */,
 				5E19A524214E3AC000D2C358 /* utils.swift in Sources */,
 				5ED107FC213D5031001A6752 /* Database.swift in Sources */,
 				5E19A50A214CE16200D2C358 /* SwitchTableViewCell.swift in Sources */,
+				5EB87C3521B2BF84007B94DD /* TableViewController.swift in Sources */,
 				5E19A520214E329700D2C358 /* VPNDetailTableViewController.swift in Sources */,
 				5E19A518214CE2EF00D2C358 /* PerAppProxyConfigurationTableViewController.swift in Sources */,
 				5E4409C8212BE35000778393 /* AppDelegate.swift in Sources */,
@@ -1473,6 +1526,7 @@
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Carthage/Build/iOS",
+					"$(PROJECT_DIR)",
 				);
 				INFOPLIST_FILE = testVPN/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1482,6 +1536,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = cn.edu.nudt.testVPN;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_OBJC_BRIDGING_HEADER = "BDLocation/BMKSwiftDemo-Bridging-Header.h";
 				SWIFT_VERSION = 3.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				USER_HEADER_SEARCH_PATHS = "";
@@ -1500,6 +1555,7 @@
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Carthage/Build/iOS",
+					"$(PROJECT_DIR)",
 				);
 				INFOPLIST_FILE = testVPN/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1509,6 +1565,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = cn.edu.nudt.testVPN;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_OBJC_BRIDGING_HEADER = "BDLocation/BMKSwiftDemo-Bridging-Header.h";
 				SWIFT_VERSION = 3.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				USER_HEADER_SEARCH_PATHS = "";
