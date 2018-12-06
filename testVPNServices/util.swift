@@ -321,9 +321,6 @@ public func postRequest(url: String, jsonData: NSData?, completion: @escaping ((
         
         do {
             if let json = try JSONSerialization.jsonObject(with: data!, options: []) as? NSDictionary {
-                //testVPNLog("Response: \(json)")
-                //ret = ((NSString(data: data!, encoding: String.Encoding.utf8.rawValue)as?String)!)
-                //completion((NSString(data: data!, encoding: String.Encoding.utf8.rawValue)as?String)! as AnyObject)
                 completion(data as AnyObject)
             } else {
                 let jsonStr = NSString(data: data!, encoding: String.Encoding.utf8.rawValue)// No error thrown, but not NSDictionary
@@ -331,7 +328,7 @@ public func postRequest(url: String, jsonData: NSData?, completion: @escaping ((
                 //self.errorResponse(jsonStr!)
             }
         } catch let parseError {
-            testVPNLog("\(parseError)")// Log the error thrown by `JSONObjectWithData`
+            testVPNLog("\(parseError) \(response)")// Log the error thrown by `JSONObjectWithData`
             let jsonStr = NSString(data: data!, encoding: String.Encoding.utf8.rawValue)
             testVPNLog("Error could not parse JSON: '\(jsonStr)'")
             //self.errorResponse(jsonStr!)

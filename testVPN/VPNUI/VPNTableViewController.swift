@@ -46,9 +46,6 @@ class VPNTableViewController: UITableViewController {
         
         postRequest(url: "http://119.23.215.159/test/checkin/checkin.php", jsonData: jsonData) { retStr in
             do{
-                //if let json = try JSONSerialization.jsonObject(with: retStr.data, options: []) as? NSDictionary {
-                //    self.database.tableAPPCONFIGInsertItem(key: "ip", value: json.value(forKey: "ip") as! String)
-                //}
                 if let json = try JSONSerialization.jsonObject(with: retStr as! Data, options: []) as? NSDictionary {
                     let lastIP = self.database.tableAPPCONFIGQueryItem(key: "ip")
                     if lastIP == nil {

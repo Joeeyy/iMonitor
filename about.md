@@ -27,7 +27,7 @@
 本文提供了一套名为iTrafficClassifier的系统，在iOS平台上搭建起了一套用于流量分析的系统。先前在iOS平台上并没有类似的尝试，可以说是iOS平台上第一个有效的工具。本工具基于iOS 9.0+的NetworkExtension API，实现了对iOS设备上流量的分析。可以为以下研究提供有效的支撑：1. 流量分类，本系统可以抓取特定APP的流量，并且进行标记，保证流量的纯净；2. 本系统将流量抓取与定位相结合，能够为流量数据与地理位置之间的联系的研究提供有效支持；3. 同样，我们可以实现内容拦截功能。4. 我们可以给用户展现其流量的具体使用情况，弥补了相关的不足。
 
 ## 0x01 系统架构
-\![](https://raw.githubusercontent.com/Joeeyy/test/master/system%20arch.png)
+\![](https://raw.githubusercontent.com/Joeeyy/test/master/system%20arch.png)  
 客户端设计、功能，服务器设计、功能，客户端服务器通信设计。
 
 客户端主要功能模块由PacketTunnel、PerAppProxy支撑。
@@ -37,17 +37,15 @@
 > ~~1. 百度地图API接入完成位置信息获取~~  
 > 2. ContentFilter接入完成内容过滤
 
-服务器主要包括**代理服务器**、**BundleID查询服务器**、**应用服务器**、**流量抓取服务器**等。
-
-代理服务器完成SOCKS5协议通信。
+iTrafficClassifier 主要分为客户端和服务器两部分，客户端就是安装在iPhone上的APP，由于使用模块的限制，APP不能够上架的AppStore，但是可以用其他的方式发布，提供给需要的用户下载。在客户端上主要完成数据的采集，主要包括流量信息和位置信息。iTrafficClassifier客户端APP在使用的过程中离不开和服务器的配合，客户端APP的运行需要服务器的支持，同时客户端收集的数据也需要上传到服务器进行整合，以提供更多服务。服务器细分可以分为三类：代理服务器、数据管理服务器和查询服务器。代理服务器主要负责流量的转发，让我们获取流量信息的同时保证用户正常使用手机中受监控的APP。查询服务器主要是用来支撑APP运行的，APP在运行期间可能需要查询自己的状态，或者确认某个APP的bundle ID，都可以从查询服务器进行获取。数据管理服务器负责收集数据，主要包括客户端对流量的标签数据、客户端记录的位置数据等。
 
 BundleID查询服务器使用频率应该不高，属于附属产品，可以提供给其他用户查询某些中国区APP的bundle ID，由Python 3.6.5 提供服务。对于本系统，主要承担在iOS端工具编译时提供目标的bundle ID的任务。
 
 应用服务器是为了支撑iOS端工具使用而建立的一系列脚本的集合。
 > 目前阶段：
 > 
-> 1. 确定APP终端所在公网IP（IP+端口，如果终端在局域网环境中的话）。
-> 2. 接收定位数据，并按照imei号码存储。
+> 1. 确定APP终端所在公网IP（IP+端口，如果终端在局域网环境中的话）。  
+> ~~2. 接收定位数据，并按照imei号码存储。~~
 > 
 
 流量抓取服务器主要完成对SOCKS5服务器转发的流量的抓取工作。
@@ -59,6 +57,28 @@ BundleID查询服务器使用频率应该不高，属于附属产品，可以提
 
 \![](https://raw.githubusercontent.com/Joeeyy/test/master/clientStructure.png)  
 上图展示了客户端上流量标记的工作原理。以出方向的流量为例，符合`PerAppProxy规则`的来自上层APP的流量会被以`NEAppProxyFlow`的形式转发到`PerAppProxy`模块进行处理，而相关处理的主要实行者就是`PerAppProxy Provider`。在这个层面上已经能够获取流量的大部分信息，其中最为主要的用来确定流量来自哪个APP的`metaData.sourceAppSigningIdentifier`已经能够获取，但是流量的IP信息事实上还不能够完全确定。对于TCP流量来说，我们可以通过将`NEAppProxyFlow`转为`NEAppProxyTCPFlow`获得其`remoteEndpoint`属性，从而得知`NEAppProxyFlow`的目的地地址，但是`NEAppProxyTCPFlow`没有提供相对应的`localEndpoint`属性，当然如果只是对流量做标记的话我们对本地地址关心的程度并不是很大，但是我们依然可以通过一些方法来获得本地的IP地址，比如通过`createTCPConnection`函数与服务器建立一个TCP连接，从而可以通过该连接获得本地IP地址，不过如果终端在局域网环境下，这种方法仅能获得终端的局域网地址，如果需要公网IP，可以通过本系统中实现的[公网IP确定服务器](#公网IP确定服务器) 来完成。对于UDP流量来说，与TCP流量恰恰相反，当我们把`NEAppProxyFlow`转为`NEAppProxyUDPFlow`后，我们只能获得其`localEndpoint`属性，而无法获得`remoteEndpoint`属性，只有我们读出`NEAppProxyUDPFlow`中的datagrams后，才能获得这些datagrams的目的地址。之后根据流量协议的不同，经由`SOCKS5 Tunnel`按照不同的协议流程发往代理服务器，并在发送的同时在本地数据库中记录流量的信息，完成流量的标记工作。
+
+*流量标记数据上传*  
+JSON格式：
+
+```
+{
+  "idfa": xxxxxx,
+  "app": xxx.xxx.xxx,
+  "data": {
+    "srcIP": String,
+    "srcPort": String,
+    "dstIP": String,
+    "dstPort": String,
+    "time": String,
+    "length": int,
+    "protocol": String,
+  }
+  ...
+}
+```
+服务器接收后，按照不同ifda、app，对应存放在ifda目录下的{app}.log文本中。
+
 
 ### 位置记录
 利用[百度定位SDK](http://lbsyun.baidu.com/index.php?title=ios-locsdk/guide/create-project/manual-create)实现。百度对iOS原生的定位服务进行了封装，在其基础上提供了语义化的定位结果，但是百度没有对iOS中[allowdeferredlocationupdates](https://developer.apple.com/documentation/corelocation/cllocationmanager/1620547-allowdeferredlocationupdates)的函数进行封装，导致如果本APP被杀死，将无法继续进行定位服务。**但是只要程序在后台，就能保证长期活动**。
@@ -132,7 +152,12 @@ BundleID查询服务器使用频率应该不高，属于附属产品，可以提
 
 ### 数据库
 
+**Network Flow logs**  
+        flow\_id(int), src\_ip(String), src\_port(String), dst\_ip(String), dst\_port(String), time(String), proto(String), length(int), app(String), direction(String)
 
+
+**APP Config**  
+        key(String), value(String)
 
 ## 0x03 服务端
 ### 代理服务器
@@ -214,7 +239,7 @@ SOCKS5服务器源码来自[Github](https://github.com/postageapp/ss5)。为了�
 
 ## 0x04 通信设计
 
-流量分类信息通信。==[待实现]==
+客户端服务器之间的通信主要通过HTTP请求实现。为了尽量降低服务器压力，流量处理服务器和其他服务器分离进行。
 
 ### 位置信息通信
 参照[定位数据上传](#定位数据上传)
@@ -299,6 +324,8 @@ AntMonitor - Android设备上被动流量分析的系统。
 大规模上  
 细粒度上  
 对用户的吸引性上  
+
+***
 
 ### PrivacyGuard: A VPN-based Platform to Detect Information Leakage on Android Devices
 时间：October 12 - 12, 2015  

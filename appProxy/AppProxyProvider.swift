@@ -23,6 +23,7 @@
 import NetworkExtension
 import testVPNServices
 import CocoaAsyncSocket
+import AdSupport
 
 
 // Indicating data type
@@ -55,7 +56,13 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
     
     let queue = DispatchQueue.init(label: "PerAppProxy")
     
+    let idfa = ASIdentifierManager.shared()?.advertisingIdentifier
+    
+    var recordFlow = false
+    
     var database: Database!
+    var currentPublicIP: String = ""
+    var currentPrivateIP: String = ""
     
     // basically, for every flow, there must be a TCP connection established between this flow to SOCKS5 server tcp listener port, and we need to determine to which flow this tcp socket belongs.
     var flows = [GCDAsyncSocket:NEAppProxyFlow]()
@@ -78,6 +85,8 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
         let newTunnel = ClientTunnel()
         newTunnel.delegate = self
         database = Database()
+        
+        currentPublicIP = database.tableAPPCONFIGQueryItem(key: "ip")!
         
         if let error = newTunnel.startTunnel(self) {
             completionHandler(error as NSError)
@@ -105,12 +114,13 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
         
         testVPNLog(self.TAG + "PER_APP_VPN stopped.")
     }
-    /*
-     self.database.tableNETWORKFLOWLOGInsertItem(srcIP: currentIP!, srcPort: currentPort!, dstIP: (self.TCPFlow.remoteEndpoint as! NWHostEndpoint).hostname, dstPort: (self.TCPFlow.remoteEndpoint as! NWHostEndpoint).port, length: readData.count, proto: "TCP", time: getTime(), app: self.TCPFlow.metaData.sourceAppSigningIdentifier, direction: "out")
-     */
     
     // Handle a new flow of network data created by an application
     override func handleNewFlow(_ flow: NEAppProxyFlow) -> Bool {
+        if self.currentPrivateIP == ""{
+            currentPrivateIP = (self.tunnel?.connection?.localAddress as! NWHostEndpoint).hostname
+        }
+        
         // Add code here to handle the incoming flow.
         testVPNLog(self.TAG+"A new PER_APP_PROXY_FLOW comes, start handling it. flow: \(flow)")
         // @deprecate var newConnection: ClientAppProxyConnection?
@@ -237,8 +247,46 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                     testVPNLog(self.TAG + "going to write data to sock: \(NSMutableData.init(data: readData))")
                     sock.write(readData, withTimeout: TimeInterval(-1), tag: SOCK_TAG.DATA.rawValue)
                     sock.readData(withTimeout: TimeInterval(-1), tag: 0)
-                    //self.database.tableNETWORKFLOWLOGInsertItem(srcIP: sock.localHost!, srcPort: "\(sock.localPort)", dstIP: (TCPFlow.remoteEndpoint as! NWHostEndpoint).hostname, dstPort: (TCPFlow.remoteEndpoint as! NWHostEndpoint).port, length: readData.count, proto: "TCP", time: getTime(), app: TCPFlow.metaData.sourceAppSigningIdentifier, direction: "out")
-                    self.database.tableNETWORKFLOWLOGInsertItem(srcIP: (self.tunnel?.connection?.localAddress as! NWHostEndpoint).hostname, srcPort: "\(sock.localPort)", dstIP: (TCPFlow.remoteEndpoint as! NWHostEndpoint).hostname, dstPort: (TCPFlow.remoteEndpoint as! NWHostEndpoint).port, length: readData.count, proto: "TCP", time: getTime(), app: TCPFlow.metaData.sourceAppSigningIdentifier, direction: "out")
+                    
+                    /// Going to record this packet
+                    let timeStr = getTime()
+                    let srcIP = self.currentPublicIP
+                    let srcPort: String
+                    if self.currentPublicIP != self.currentPrivateIP {
+                        srcPort = "0"
+                    }
+                    else{
+                        srcPort = "\(sock.localPort)"
+                    }
+                    let dstIP = (TCPFlow.remoteEndpoint as! NWHostEndpoint).hostname
+                    let dstPort = (TCPFlow.remoteEndpoint as! NWHostEndpoint).port
+                    let length = readData.count
+                    let app = TCPFlow.metaData.sourceAppSigningIdentifier
+                    
+                    let labDic: NSMutableDictionary = NSMutableDictionary()
+                    let dataDic: NSMutableDictionary = NSMutableDictionary()
+                    labDic["idfa"] = self.idfa?.uuidString
+                    labDic["app"] = app
+                    dataDic["srcIP"] = srcIP
+                    dataDic["srcPort"] = srcPort
+                    dataDic["dstIP"] = dstIP
+                    dataDic["dstPort"] = dstPort
+                    dataDic["time"] = timeStr
+                    dataDic["length"] = length
+                    dataDic["protocol"] = "TCP"
+                    let dataDicStr = toJSONString(dict: dataDic)
+                    labDic["record"] = dataDicStr
+                    var jsonData:NSData? = nil
+                    do {
+                        jsonData  = try JSONSerialization.data(withJSONObject: labDic, options:JSONSerialization.WritingOptions.prettyPrinted) as NSData
+                        postRequest(url: "http://119.23.215.159/test/checkin/labRec.php", jsonData: jsonData){ _ in
+                        }
+                    } catch let error as NSError{
+                        testVPNLog("\(error)")
+                    }
+                    if self.recordFlow{
+                        self.database.tableNETWORKFLOWLOGInsertItem(srcIP: srcIP, srcPort: srcPort, dstIP: dstIP, dstPort: dstPort, length:length, proto: "TCP", time: timeStr, app: app, direction: "out")
+                    }
                 }
             }
         }
@@ -421,8 +469,46 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                     sock.write(readData, withTimeout: TimeInterval(-1), tag: SOCK_TAG.DATA.rawValue)
                     sock.readData(withTimeout: TimeInterval(-1), tag: 0)
                     
-                    //self.database.tableNETWORKFLOWLOGInsertItem(srcIP: sock.localHost!, srcPort: "\(sock.localPort)", dstIP: (TCPFlow.remoteEndpoint as! NWHostEndpoint).hostname, dstPort: (TCPFlow.remoteEndpoint as! NWHostEndpoint).port, length: readData.count, proto: "TCP", time: getTime(), app: TCPFlow.metaData.sourceAppSigningIdentifier, direction: "out")
-                    self.database.tableNETWORKFLOWLOGInsertItem(srcIP: (self.tunnel?.connection?.localAddress as! NWHostEndpoint).hostname, srcPort: "\(sock.localPort)", dstIP: (TCPFlow.remoteEndpoint as! NWHostEndpoint).hostname, dstPort: (TCPFlow.remoteEndpoint as! NWHostEndpoint).port, length: readData.count, proto: "TCP", time: getTime(), app: TCPFlow.metaData.sourceAppSigningIdentifier, direction: "out")
+                    /// Going to record this packet
+                    let timeStr = getTime()
+                    let srcIP = self.currentPublicIP
+                    let srcPort: String
+                    if self.currentPublicIP != self.currentPrivateIP {
+                        srcPort = "0"
+                    }
+                    else{
+                        srcPort = "\(sock.localPort)"
+                    }
+                    let dstIP = (TCPFlow.remoteEndpoint as! NWHostEndpoint).hostname
+                    let dstPort = (TCPFlow.remoteEndpoint as! NWHostEndpoint).port
+                    let length = readData.count
+                    let app = TCPFlow.metaData.sourceAppSigningIdentifier
+                    
+                    let labDic: NSMutableDictionary = NSMutableDictionary()
+                    let dataDic: NSMutableDictionary = NSMutableDictionary()
+                    labDic["idfa"] = self.idfa?.uuidString
+                    labDic["app"] = app
+                    dataDic["srcIP"] = srcIP
+                    dataDic["srcPort"] = srcPort
+                    dataDic["dstIP"] = dstIP
+                    dataDic["dstPort"] = dstPort
+                    dataDic["time"] = timeStr
+                    dataDic["length"] = length
+                    dataDic["protocol"] = "TCP"
+                    let dataDicStr = toJSONString(dict: dataDic)
+                    labDic["record"] = dataDicStr
+                    var jsonData:NSData? = nil
+                    do {
+                        jsonData  = try JSONSerialization.data(withJSONObject: labDic, options:JSONSerialization.WritingOptions.prettyPrinted) as NSData
+                        postRequest(url: "http://119.23.215.159/test/checkin/labRec.php", jsonData: jsonData){ _ in
+                            
+                        }
+                    } catch let error as NSError{
+                        testVPNLog("\(error)")
+                    }
+                    if self.recordFlow{
+                        self.database.tableNETWORKFLOWLOGInsertItem(srcIP: self.currentPublicIP, srcPort: srcPort, dstIP: dstIP, dstPort: dstPort, length:length, proto: "TCP", time: timeStr, app: app, direction: "out")
+                    }
                 }
             }
             else if let UDPFlow = flows[sock] as? NEAppProxyUDPFlow {
@@ -484,8 +570,48 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                         self.closeSock(sock, forFlow: TCPFlow, reason: "Error happened while writing data back to app: \(error)")
                         return 
                     }
-                    //self.database.tableNETWORKFLOWLOGInsertItem(srcIP: (TCPFlow.remoteEndpoint as! NWHostEndpoint).hostname, srcPort: (TCPFlow.remoteEndpoint as! NWHostEndpoint).port, dstIP: sock.localHost!, dstPort: "\(sock.localPort)", length: data.count, proto: "TCP", time: getTime(), app: TCPFlow.metaData.sourceAppSigningIdentifier, direction: "in")
-                    self.database.tableNETWORKFLOWLOGInsertItem(srcIP: (TCPFlow.remoteEndpoint as! NWHostEndpoint).hostname, srcPort: (TCPFlow.remoteEndpoint as! NWHostEndpoint).port, dstIP: (self.tunnel?.connection?.localAddress as! NWHostEndpoint).hostname, dstPort: "\(sock.localPort)", length: data.count, proto: "TCP", time: getTime(), app: TCPFlow.metaData.sourceAppSigningIdentifier, direction: "in")
+                    
+                    /// Going to record this packet
+                    let timeStr = getTime()
+                    let srcIP = (TCPFlow.remoteEndpoint as! NWHostEndpoint).hostname
+                    let srcPort = (TCPFlow.remoteEndpoint as! NWHostEndpoint).port
+                    let dstIP = self.currentPublicIP
+                    let dstPort: String
+                    if self.currentPublicIP != self.currentPrivateIP {
+                        dstPort = "0"
+                    }
+                    else{
+                        dstPort = "\(sock.localPort)"
+                    }
+                    let length = data.count
+                    let app = TCPFlow.metaData.sourceAppSigningIdentifier
+                    
+                    let labDic: NSMutableDictionary = NSMutableDictionary()
+                    let dataDic: NSMutableDictionary = NSMutableDictionary()
+                    labDic["idfa"] = self.idfa?.uuidString
+                    labDic["app"] = app
+                    dataDic["srcIP"] = srcIP
+                    dataDic["srcPort"] = srcPort
+                    dataDic["dstIP"] = dstIP
+                    dataDic["dstPort"] = dstPort
+                    dataDic["time"] = timeStr
+                    dataDic["length"] = length
+                    dataDic["protocol"] = "TCP"
+                    let dataDicStr = toJSONString(dict: dataDic)
+                    labDic["record"] = dataDicStr
+                    var jsonData:NSData? = nil
+                    do {
+                        jsonData  = try JSONSerialization.data(withJSONObject: labDic, options:JSONSerialization.WritingOptions.prettyPrinted) as NSData
+                        postRequest(url: "http://119.23.215.159/test/checkin/labRec.php", jsonData: jsonData){ _ in
+                            
+                        }
+                    } catch let error as NSError{
+                        testVPNLog("\(error)")
+                    }
+                    if self.recordFlow{
+                        self.database.tableNETWORKFLOWLOGInsertItem(srcIP: srcIP, srcPort: srcPort, dstIP: dstIP, dstPort: dstPort, length:length, proto: "TCP", time: timeStr, app: app, direction: "in")
+                    }
+                    
                     sock.readData(withTimeout: TimeInterval(-1), tag: 0)
                 }
             }
@@ -598,7 +724,47 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                 payload += data
                 
                 
-                self.database.tableNETWORKFLOWLOGInsertItem(srcIP: sock.localHost()!, srcPort: "\(sock.localPort)", dstIP: endpoint.hostname, dstPort: endpoint.port, length: datagram.count, proto: "UDP", time: getTime(), app: UDPFlow.metaData.sourceAppSigningIdentifier, direction: "out")
+                /// Going to record this packet
+                let timeStr = getTime()
+                let srcIP = self.currentPublicIP
+                let srcPort: String
+                if self.currentPublicIP != self.currentPrivateIP {
+                    srcPort = "0"
+                }
+                else{
+                    srcPort = "\(sock.localPort)"
+                }
+                let dstIP = endpoint.hostname
+                let dstPort = endpoint.port
+                let length = datagram.count
+                let app = UDPFlow.metaData.sourceAppSigningIdentifier
+                
+                let labDic: NSMutableDictionary = NSMutableDictionary()
+                let dataDic: NSMutableDictionary = NSMutableDictionary()
+                labDic["idfa"] = self.idfa?.uuidString
+                labDic["app"] = app
+                dataDic["srcIP"] = srcIP
+                dataDic["srcPort"] = srcPort
+                dataDic["dstIP"] = dstIP
+                dataDic["dstPort"] = dstPort
+                dataDic["time"] = timeStr
+                dataDic["length"] = length
+                dataDic["protocol"] = "UDP"
+                let dataDicStr = toJSONString(dict: dataDic)
+                labDic["record"] = dataDicStr
+                var jsonData:NSData? = nil
+                do {
+                    jsonData  = try JSONSerialization.data(withJSONObject: labDic, options:JSONSerialization.WritingOptions.prettyPrinted) as NSData
+                    postRequest(url: "http://119.23.215.159/test/checkin/labRec.php", jsonData: jsonData){ _ in
+                        
+                    }
+                } catch let error as NSError{
+                    testVPNLog("\(error)")
+                }
+                if self.recordFlow{
+                    self.database.tableNETWORKFLOWLOGInsertItem(srcIP: srcIP, srcPort: srcPort, dstIP: dstIP, dstPort: dstPort, length:length, proto: "UDP", time: timeStr, app: app, direction: "out")
+                }
+                
                 sock.send(Data.init(bytes: payload), withTimeout: TimeInterval(-1), tag: 0)
                 //sock.send(Data.init(bytes: payload), toHost: sock.connectedHost()!, port: sock.connectedPort(), withTimeout: TimeInterval(-1), tag: 0)
             }
@@ -677,7 +843,48 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                 payload += portHex
                 payload += data
                 
-                self.database.tableNETWORKFLOWLOGInsertItem(srcIP: sock.localHost()!, srcPort: "\(sock.localPort)", dstIP: endpoint.hostname, dstPort: endpoint.port, length: datagram.count, proto: "UDP", time: getTime(), app: UDPFlow!.metaData.sourceAppSigningIdentifier, direction: "out")
+                
+                /// Going to record this packet
+                let timeStr = getTime()
+                let srcIP = self.currentPublicIP
+                let srcPort: String
+                if self.currentPublicIP != self.currentPrivateIP {
+                    srcPort = "0"
+                }
+                else{
+                    srcPort = "\(sock.localPort)"
+                }
+                let dstIP = endpoint.hostname
+                let dstPort = endpoint.port
+                let length = datagram.count
+                let app = UDPFlow!.metaData.sourceAppSigningIdentifier
+                
+                let labDic: NSMutableDictionary = NSMutableDictionary()
+                let dataDic: NSMutableDictionary = NSMutableDictionary()
+                labDic["idfa"] = self.idfa?.uuidString
+                labDic["app"] = app
+                dataDic["srcIP"] = srcIP
+                dataDic["srcPort"] = srcPort
+                dataDic["dstIP"] = dstIP
+                dataDic["dstPort"] = dstPort
+                dataDic["time"] = timeStr
+                dataDic["length"] = length
+                dataDic["protocol"] = "UDP"
+                let dataDicStr = toJSONString(dict: dataDic)
+                labDic["record"] = dataDicStr
+                var jsonData:NSData? = nil
+                do {
+                    jsonData  = try JSONSerialization.data(withJSONObject: labDic, options:JSONSerialization.WritingOptions.prettyPrinted) as NSData
+                    postRequest(url: "http://119.23.215.159/test/checkin/labRec.php", jsonData: jsonData){ _ in
+                        
+                    }
+                } catch let error as NSError{
+                    testVPNLog("\(error)")
+                }
+                if self.recordFlow{
+                    self.database.tableNETWORKFLOWLOGInsertItem(srcIP: srcIP, srcPort: srcPort, dstIP: dstIP, dstPort: dstPort, length:length, proto: "UDP", time: timeStr, app: app, direction: "out")
+                }
+                
                 sock.send(Data.init(bytes: payload), withTimeout: TimeInterval(-1), tag: 0)
                 //sock.send(Data.init(bytes: payload), toHost: sock.connectedHost()!, port: sock.connectedPort(), withTimeout: TimeInterval(-1), tag: 0)
             }
@@ -737,7 +944,46 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
         //let endpoint = [ NWHostEndpoint(hostname: sock.connectedHost()!, port: "\(sock.connectedPort())") ]
         testVPNLog("sent by \(endpoint)")
         
-        self.database.tableNETWORKFLOWLOGInsertItem(srcIP: endpoint[0].hostname, srcPort: endpoint[0].port, dstIP: sock.localHost()!, dstPort: "\(sock.localPort())", length: datagram[0].count, proto: "UDP", time: getTime(), app: flow.metaData.sourceAppSigningIdentifier, direction: "in")
+        /// Going to record this packet
+        let timeStr = getTime()
+        let dstIP = self.currentPublicIP
+        let dstPort: String
+        if self.currentPublicIP != self.currentPrivateIP {
+            dstPort = "0"
+        }
+        else{
+            dstPort = "\(sock.localPort)"
+        }
+        let srcIP = endpoint[0].hostname
+        let srcPort = endpoint[0].port
+        let length = datagram[0].count
+        let app = flow.metaData.sourceAppSigningIdentifier
+        
+        let labDic: NSMutableDictionary = NSMutableDictionary()
+        let dataDic: NSMutableDictionary = NSMutableDictionary()
+        labDic["idfa"] = self.idfa?.uuidString
+        labDic["app"] = app
+        dataDic["srcIP"] = srcIP
+        dataDic["srcPort"] = srcPort
+        dataDic["dstIP"] = dstIP
+        dataDic["dstPort"] = dstPort
+        dataDic["time"] = timeStr
+        dataDic["length"] = length
+        dataDic["protocol"] = "UDP"
+        let dataDicStr = toJSONString(dict: dataDic)
+        labDic["record"] = dataDicStr
+        var jsonData:NSData? = nil
+        do {
+            jsonData  = try JSONSerialization.data(withJSONObject: labDic, options:JSONSerialization.WritingOptions.prettyPrinted) as NSData
+            postRequest(url: "http://119.23.215.159/test/checkin/labRec.php", jsonData: jsonData){ _ in
+                
+            }
+        } catch let error as NSError{
+            testVPNLog("\(error)")
+        }
+        if self.recordFlow{
+            self.database.tableNETWORKFLOWLOGInsertItem(srcIP: srcIP, srcPort: srcPort, dstIP: dstIP, dstPort: dstPort, length:length, proto: "UDP", time: timeStr, app: app, direction: "in")
+        }
         
         flow.writeDatagrams(datagram, sentBy: endpoint) { error in
             if error != nil {

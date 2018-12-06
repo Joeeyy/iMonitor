@@ -352,13 +352,19 @@ kbd {
 
 <h2 id="toc_1">0x00 概述</h2>
 
+<blockquote>
 <p>项目需求背景描述，工具功能概述，工具运行环境概述，限制概述。</p>
+</blockquote>
 
-<p>本系统为网络流量分类研究提供了一种可以可靠标记流量类别的工具。Android平台上已经有相应的工具，但是iOS平台上能够为流量按照不同APP进行分类的应用还很鲜见。除了对流量进行标记之外，本应用还提供内容过滤的功能，也会对用户的位置信息进行记录，方便后续分析流量与位置关系。</p>
+<p>随着信息技术的不断发展，互联网用户的人数也在不断增多。更多技术上的创新，更多新设备的研发，让人们在接入互联网的方式上有了更多的选择。现如今，人们接入互联网的方式已经不再仅仅局限于桌面浏览器，更多移动设备，比如手机、平板等，给人们提供更多更加便利的上网方式。「论证以上」<br>
+在移动设备上，接入互联网主要以APP的形式，当然诸多浏览器也算是APP的一种。现行主流移动端操作系统主要分为Android和iOS两大阵营，无论在哪一阵营中，其中的APP功能遍及到人们日常工作生活的方方面面，可以说现代人的生活已经越来越离不开这些APP。APP数目多，种类多，与使用者关系十分密切，有研究者证实，通过用户移动设备的APP安装情况可以分析出这个用户的人物画像，包括人物性格、喜好，乃至政治倾向、性取向可以被分析出来。移动APP涉及到金融交易、社交信息等各种极为敏感的数据，也使自己成为了无数灰黑产人员眼中的目标，导致移动APP的信息安全受到极大的关注。<br>
+有关移动流量分析已经有前人做了大量工作。「举例」但是这些工作主要集中在Android平台上，对iOS涉及较少。虽然流量产生于平台并在平台之间进行交流，但是不同平台由于语言不通，同一个APP在实现的时候会产生变化，而且来自不同平台的流量会有不同的特征，如果不实际验证并不能保证理论的完全正确性。<br>
+本文提供了一套名为iTrafficClassifier的系统，在iOS平台上搭建起了一套用于流量分析的系统。先前在iOS平台上并没有类似的尝试，可以说是iOS平台上第一个有效的工具。本工具基于iOS 9.0+的NetworkExtension API，实现了对iOS设备上流量的分析。可以为以下研究提供有效的支撑：1. 流量分类，本系统可以抓取特定APP的流量，并且进行标记，保证流量的纯净；2. 本系统将流量抓取与定位相结合，能够为流量数据与地理位置之间的联系的研究提供有效支持；3. 同样，我们可以实现内容拦截功能。4. 我们可以给用户展现其流量的具体使用情况，弥补了相关的不足。</p>
 
 <h2 id="toc_2">0x01 系统架构</h2>
 
-<p>客户端设计、功能，服务器设计、功能，客户端服务器通信设计。</p>
+<p>!<a href="https://raw.githubusercontent.com/Joeeyy/test/master/system%20arch.png"></a><br>
+客户端设计、功能，服务器设计、功能，客户端服务器通信设计。</p>
 
 <p>客户端主要功能模块由PacketTunnel、PerAppProxy支撑。</p>
 
@@ -369,9 +375,7 @@ kbd {
 2. ContentFilter接入完成内容过滤</p>
 </blockquote>
 
-<p>服务器主要包括<strong>代理服务器</strong>、<strong>BundleID查询服务器</strong>、<strong>应用服务器</strong>、<strong>流量抓取服务器</strong>等。</p>
-
-<p>代理服务器完成SOCKS5协议通信。</p>
+<p>iTrafficClassifier 主要分为客户端和服务器两部分，客户端就是安装在iPhone上的APP，由于使用模块的限制，APP不能够上架的AppStore，但是可以用其他的方式发布，提供给需要的用户下载。在客户端上主要完成数据的采集，主要包括流量信息和位置信息。iTrafficClassifier客户端APP在使用的过程中离不开和服务器的配合，客户端APP的运行需要服务器的支持，同时客户端收集的数据也需要上传到服务器进行整合，以提供更多服务。服务器细分可以分为三类：代理服务器、数据管理服务器和查询服务器。代理服务器主要负责流量的转发，让我们获取流量信息的同时保证用户正常使用手机中受监控的APP。查询服务器主要是用来支撑APP运行的，APP在运行期间可能需要查询自己的状态，或者确认某个APP的bundle ID，都可以从查询服务器进行获取。数据管理服务器负责收集数据，主要包括客户端对流量的标签数据、客户端记录的位置数据等。</p>
 
 <p>BundleID查询服务器使用频率应该不高，属于附属产品，可以提供给其他用户查询某些中国区APP的bundle ID，由Python 3.6.5 提供服务。对于本系统，主要承担在iOS端工具编译时提供目标的bundle ID的任务。</p>
 
@@ -381,8 +385,8 @@ kbd {
 <p>目前阶段：</p>
 
 <ol>
-<li>确定APP终端所在公网IP（IP+端口，如果终端在局域网环境中的话）。</li>
-<li>接收定位数据，并按照imei号码存储。</li>
+<li>确定APP终端所在公网IP（IP+端口，如果终端在局域网环境中的话）。<br>
+<del>2. 接收定位数据，并按照imei号码存储。</del></li>
 </ol>
 </blockquote>
 
@@ -394,11 +398,35 @@ kbd {
 
 <h2 id="toc_3">0x02 客户端</h2>
 
-<p>PakcetTunnel、PerAppProxy。</p>
+<h3 id="toc_4">流量标记</h3>
 
-<p>记录每一个packet或者datagram的详细信息，包含app信息。</p>
+<p>利用iOS提供的<a href="https://developer.apple.com/documentation/networkextension">NetworkExtension</a>中的<code>PerAppProxy</code>，我们可以以<code>NEAppProxyFlow</code>的形式获取目标APP的通信流量信息，包括流量来自哪个APP的信息，由此完成流量的按APP标记工作。<code>metaData.sourceAppSigningIdentifier</code>是我们获取源APP信息的属性，获取之后的标志符是以<code>BundleID</code>的形式呈现的，所以我们需要获取一些目标APP的<code>BundleID</code>，参看<a href="#BundleID%E6%9F%A5%E8%AF%A2%E6%9C%8D%E5%8A%A1%E5%99%A8">BundleID查询服务器</a>。</p>
 
-<h3 id="toc_4">位置记录</h3>
+<p>!<a href="https://raw.githubusercontent.com/Joeeyy/test/master/clientStructure.png"></a><br>
+上图展示了客户端上流量标记的工作原理。以出方向的流量为例，符合<code>PerAppProxy规则</code>的来自上层APP的流量会被以<code>NEAppProxyFlow</code>的形式转发到<code>PerAppProxy</code>模块进行处理，而相关处理的主要实行者就是<code>PerAppProxy Provider</code>。在这个层面上已经能够获取流量的大部分信息，其中最为主要的用来确定流量来自哪个APP的<code>metaData.sourceAppSigningIdentifier</code>已经能够获取，但是流量的IP信息事实上还不能够完全确定。对于TCP流量来说，我们可以通过将<code>NEAppProxyFlow</code>转为<code>NEAppProxyTCPFlow</code>获得其<code>remoteEndpoint</code>属性，从而得知<code>NEAppProxyFlow</code>的目的地地址，但是<code>NEAppProxyTCPFlow</code>没有提供相对应的<code>localEndpoint</code>属性，当然如果只是对流量做标记的话我们对本地地址关心的程度并不是很大，但是我们依然可以通过一些方法来获得本地的IP地址，比如通过<code>createTCPConnection</code>函数与服务器建立一个TCP连接，从而可以通过该连接获得本地IP地址，不过如果终端在局域网环境下，这种方法仅能获得终端的局域网地址，如果需要公网IP，可以通过本系统中实现的<a href="#%E5%85%AC%E7%BD%91IP%E7%A1%AE%E5%AE%9A%E6%9C%8D%E5%8A%A1%E5%99%A8">公网IP确定服务器</a> 来完成。对于UDP流量来说，与TCP流量恰恰相反，当我们把<code>NEAppProxyFlow</code>转为<code>NEAppProxyUDPFlow</code>后，我们只能获得其<code>localEndpoint</code>属性，而无法获得<code>remoteEndpoint</code>属性，只有我们读出<code>NEAppProxyUDPFlow</code>中的datagrams后，才能获得这些datagrams的目的地址。之后根据流量协议的不同，经由<code>SOCKS5 Tunnel</code>按照不同的协议流程发往代理服务器，并在发送的同时在本地数据库中记录流量的信息，完成流量的标记工作。</p>
+
+<p><em>流量标记数据上传</em><br>
+JSON格式：</p>
+
+<div><pre><code class="language-none">{
+  &quot;idfa&quot;: xxxxxx,
+  &quot;0&quot;: {
+    &quot;app&quot;: xxx.xxx.xxx,
+    &quot;packet&quot;: {
+      &quot;srcIP&quot;: String,
+      &quot;srcPort&quot;: String,
+      &quot;dstIP&quot;: String,
+      &quot;dstPort&quot;: String,
+      &quot;time&quot;: String,
+      &quot;length&quot;: int,
+    }
+  }
+  ...
+}</code></pre></div>
+
+<p>服务器接收后，按照不同ifda、app，对应存放在ifda目录下的{app}.log文本中。</p>
+
+<h3 id="toc_5">位置记录</h3>
 
 <p>利用<a href="http://lbsyun.baidu.com/index.php?title=ios-locsdk/guide/create-project/manual-create">百度定位SDK</a>实现。百度对iOS原生的定位服务进行了封装，在其基础上提供了语义化的定位结果，但是百度没有对iOS中<a href="https://developer.apple.com/documentation/corelocation/cllocationmanager/1620547-allowdeferredlocationupdates">allowdeferredlocationupdates</a>的函数进行封装，导致如果本APP被杀死，将无法继续进行定位服务。<strong>但是只要程序在后台，就能保证长期活动</strong>。</p>
 
@@ -437,7 +465,8 @@ kbd {
   <code>locationDescribe: NSString</code>: 定位地点在什么地方周围的语义化描述信息。
   <code>poiList: NSArray&lt;BMKLocationPoi*&gt;</code>: 语义化结果，表示该定位点周围的poi列表。</p>
 
-<p><span id="定位数据上传"><em>定位数据上传</em><br>
+<p><span id="定位数据上传">
+<em>定位数据上传</em><br>
 定位数据是由BaiduLocation SDK产生的，每隔大约15s会有一次定位结果。本APP不在手机上保留定位结果，在获得定位结果后就通过HTTP POST以JSON的形式上传到服务器，JSON格式如下：</p>
 
 <div><pre><code class="language-none">{
@@ -470,13 +499,19 @@ kbd {
 <p><del>其中<code>imei</code>用于确定iPhone终端。也可以获得设备的<code>UUID</code>作为唯一标志。</del><br>
 根据<a href="https://blog.csdn.net/Sir_Coding/article/details/68943033">iOS - 获取设备标识符UUID/UDID/IMEI等</a>，iOS上获取<code>IMEI</code>、<code>IMSI</code>、<code>UDID</code>已经不再可能。而<code>UUID</code>作为唯一标志符比较繁琐，参考<a href="https://www.jianshu.com/p/9e885c3e6b0a">获取iOS设备唯一标示UUID——Swift版</a>这里使用<code>IDFA</code>作为唯一标志符，<strong>要求用户允许追踪</strong>。<code>IDFA</code>会在用户卸载iPhone上所有相关开发商的APP后重置。<code>353B317C-0B24-4C0F-B840-92A77F6350BC</code>是一个样例。</p>
 
-<h3 id="toc_5">内容过滤</h3>
+<h3 id="toc_6">内容过滤</h3>
 
-<h3 id="toc_6">数据库</h3>
+<h3 id="toc_7">数据库</h3>
 
-<h2 id="toc_7">0x03 服务端</h2>
+<p><strong>Network Flow logs</strong><br>
+        flow_id(int), src_ip(String), src_port(String), dst_ip(String), dst_port(String), time(String), proto(String), length(int), app(String), direction(String)</p>
 
-<h3 id="toc_8">代理服务器</h3>
+<p><strong>APP Config</strong><br>
+        key(String), value(String)</p>
+
+<h2 id="toc_8">0x03 服务端</h2>
+
+<h3 id="toc_9">代理服务器</h3>
 
 <blockquote>
 <p>服务器地址：119.23.215.159:10808  </p>
@@ -488,7 +523,7 @@ kbd {
 <a href="https://tools.ietf.org/html/rfc1929">RFC 1929</a>，<code>SOCKS5</code>用户名密码认证过程。<br>
 <a href="https://tools.ietf.org/html/rfc1961">RFC 1961</a>，<code>SOCKS5</code>GSS-API方式认证过程。</p>
 
-<h3 id="toc_9">流量抓取服务器</h3>
+<h3 id="toc_10">流量抓取服务器</h3>
 
 <blockquote>
 <p>利用TCPDump配合脚本实现<br>
@@ -521,9 +556,19 @@ tcpdump -w t.pcap -C 1 [expression]<br>
 沟通需求后再确定，目前来看可以只抓ipv4的部分。</p>
 </blockquote>
 
-<h3 id="toc_10">应用服务器</h3>
+<p><span id="BundleID查询服务器"></p>
 
-<h4 id="toc_11">1 定位数据接收服务器</h4>
+<h3 id="toc_11">BundleID查询服务器</h3>
+
+<blockquote>
+<p>地址：http://www.ainassine.cn/AppStore_Crawler_Demo/index.html</p>
+</blockquote>
+
+<p>为了更方便的实现查询iOS APP的<code>BundleID</code>，本人写了一个<code>APP Crawler</code>放在<a href="https://github.com/Joeeyy/app_crawler">Github</a>上。相关细节后续补上。</p>
+
+<h3 id="toc_12">应用服务器</h3>
+
+<h4 id="toc_13">1 定位数据接收服务器</h4>
 
 <blockquote>
 <p>地址：<br>
@@ -548,7 +593,9 @@ Zend Engine v2.4.0, Copyright (c) 1998-2013 Zend Technologies  </p>
 
 <p>定位数据以<code>JSON</code>格式通过<code>HTTP POST</code>方式上传到服务器。服务器采用PHP实现，负责接收数据，并且以<code>locRec{UUID}.log</code>的形式对不同iPhone终端的定位数据进行保存。样例请看<a href="https://app.ainassine.cn/test/checkin/locRec353B317C-0B24-4C0F-B840-92A77F6350BC.log">这里</a>。</p>
 
-<h4 id="toc_12">2 公网IP确定服务器</h4>
+<p><span id="公网IP确定服务器"></p>
+
+<h4 id="toc_14">2 公网IP确定服务器</h4>
 
 <blockquote>
 <p>地址：<br>
@@ -557,23 +604,25 @@ http://119.23.215.159/test/checkin/checkin.php</p>
 
 <p>类似定位数据接收服务器，应用在启动后会以<code>HTTP POST</code>的形式，带自己的<code>UUID</code>请求服务地址，从而获得自己的<code>公网IP</code>地址。。</p>
 
-<h2 id="toc_13">0x04 通信设计</h2>
+<h4 id="toc_15">3 流量标记上传服务器</h4>
 
-<p>流量分类信息通信。<mark>[待实现]</mark></p>
+<h2 id="toc_16">0x04 通信设计</h2>
 
-<h3 id="toc_14">位置信息通信</h3>
+<p>客户端服务器之间的通信主要通过HTTP请求实现。为了尽量降低服务器压力，流量处理服务器和其他服务器分离进行。</p>
+
+<h3 id="toc_17">位置信息通信</h3>
 
 <p>参照<a href="#%E5%AE%9A%E4%BD%8D%E6%95%B0%E6%8D%AE%E4%B8%8A%E4%BC%A0">定位数据上传</a></p>
 
-<h2 id="toc_15">0x05 应用分析</h2>
+<h2 id="toc_18">0x05 应用分析</h2>
 
 <p>客户端开销 <mark>[TODO]</mark></p>
 
 <p>服务器容量 <mark>[TODO]</mark></p>
 
-<h2 id="toc_16">0x06 成果对比</h2>
+<h2 id="toc_19">0x06 成果对比</h2>
 
-<h2 id="toc_17">0x07 参考</h2>
+<h2 id="toc_20">0x07 参考</h2>
 
 <p>[1] <a href="https://forums.developer.apple.com/message/339578#339578">Reboot caused by my AppProxy handling UDPFlows</a><br>
 [2] <a href="https://forums.developer.apple.com/thread/107013">Does NetworkExtension know which app the data flow comes from?</a><br>
@@ -582,6 +631,81 @@ http://119.23.215.159/test/checkin/checkin.php</p>
 [5] <a href="https://tools.ietf.org/html/rfc1928">RFC 1928</a><br>
 [6] <a href="https://tools.ietf.org/html/rfc1929">RFC 1929</a><br>
 [7] <a href="https://tools.ietf.org/html/rfc1961">RFC 1961</a>  </p>
+
+<p>智能机用户情况：https://venturebeat.com/2018/09/11/newzoo-smartphone-users-will-top-3-billion-in-2018-hit-3-8-billion-by-2021/</p>
+
+<h2 id="toc_21">一些文献</h2>
+
+<h3 id="toc_22">Robust Smartphone App Identification Via Encrypted Network Traffic Analysis</h3>
+
+<p>时间：09 August 2017<br>
+作者：https://ieeexplore.ieee.org/abstract/document/8006282/authors<br>
+发表于：IEEE Transactions on Information Forensics and Security  </p>
+
+<p>提出了一种利用机器学习技术基于旁路数据（加密报文的长度、方向）对APP进行指纹提取和识别的技术，并对APP指纹在不同时间、不同设备、不同版本APP中的变化。</p>
+
+<p>效果，测试了110中Google商店上流行的APP，并能在六个月后以96%的准确率识别他们。</p>
+
+<p>介绍：
+1. 智能机的消费增速快。引用Gartner的调查结果。[1]
+2. APP使用广泛。引用Flurry的调查结果。[2]
+3. 使用者花费大量时间在众多APP上。引用Nielson的调查结果。[3]
+4. 智能机现在是接入互联网的最普遍方式。引用Guardian的调查结果。[4]
+5. 智能机产生的流量是台式机、平板、移动路由设备产生的流量的和的两倍。引用Telegraph的调查结果。[5]
+6. 以上各点将智能机置于所有想要研究公众流量的人的焦点中。</p>
+
+<ol>
+<li>通过一个人装的APP可以对人物进行画像。[6]</li>
+<li>网络流量指纹提取是近年的新领域。机器学习的手段可以应用到该领域上。[7]</li>
+<li>近年APP的指纹提取和识别在以下几种方法上没有取得进展：基于端口的指纹提取（由于APP主要基于HTTP和HTTPS进行数据传输）,经典的网页指纹提取（由于APP总是以XML、JSON这样的文本形式进行数据传输，其中不含富文本信息），CDN的使用使得域名解析、IP地址查询、DNS解析或者TLS握手无法被用作鉴定根据。</li>
+<li>本文提供的技术的应用场景：针对特定APP的攻击，针对特定用户的攻击，网络管理，广告和市场营销。</li>
+<li>是对AppScanner，应用扫描框架，的扩展。[8]</li>
+</ol>
+
+<p>相关工作
+1. 工作站和浏览器的流量分析已经有很多工作。[9]
+2. 智能机的流量通信与工作站和浏览器的流量分析有不同。[10]-[13]</p>
+
+<p>流量分析方法
+1. 工作站上传统的流量分析方法。</p>
+
+<p>智能机流量分析的方法
+NetProfiler，使用一种UI Fuzzing的方法来模拟在一个APP上的操作，并同时记录log和流量。他们分析的是Payload。[20]
+提出了一种利用设备产生的特殊流量模式识别整个设备的框架。训练时间长。[21]
+提出了一种能够从加密的802.11帧中识别智能机APP的系统。但是系统测试样本小，长时间训练反而会产生副作用。[22]
+they have no way to collect accurate ground truth, i.e., a labelled dataset that is free of noise from other apps.
+！！！虽然本系统声称“Indeed, our methodology minimises noise by running a single app at a time, and we still had to filter 13% of the traffic collected because it was background traffic from other apps.”，他们始终无法保证app的流量的纯洁性。</p>
+
+<hr>
+
+<h3 id="toc_23">AntMonitor: A System for Monitoring from Mobile Devices</h3>
+
+<p>时间：August 17 - 17, 2015<br>
+发表于：C2B(1)D &#39;15 Proceedings of the 2015 ACM SIGCOMM Workshop on Crowdsourcing and Crowdsharing of Big (Internet) Data</p>
+
+<p>AntMonitor - Android设备上被动流量分析的系统。
+给用户对监控数据的选择权<br>
+不需要root<br>
+支持客户端流量分析<br>
+支持大量的、细粒度的、富含语义的流量收集。</p>
+
+<p>能够支撑以下几个研究方面：
+1. 从边缘进行网络测量
+2. 移动流量分析
+3. 隐私泄露检测和一些其他的可疑行为</p>
+
+<p>介绍<br>
+大规模上<br>
+细粒度上<br>
+对用户的吸引性上  </p>
+
+<hr>
+
+<h3 id="toc_24">PrivacyGuard: A VPN-based Platform to Detect Information Leakage on Android Devices</h3>
+
+<p>时间：October 12 - 12, 2015<br>
+发表于：SPSM &#39;15 Proceedings of the 5th Annual ACM CCS Workshop on Security and Privacy in Smartphones and Mobile Devices
+Pages 15-26  </p>
 
 
 
