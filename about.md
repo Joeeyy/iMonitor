@@ -259,6 +259,7 @@ SOCKS5服务器源码来自[Github](https://github.com/postageapp/ss5)。为了�
 [5] [RFC 1928](https://tools.ietf.org/html/rfc1928)  
 [6] [RFC 1929](https://tools.ietf.org/html/rfc1929)  
 [7] [RFC 1961](https://tools.ietf.org/html/rfc1961)  
+[8] [网络环境变化检测](https://github.com/ashleymills/Reachability.swift/blob/master/Sources/Reachability.swift)
 
 
 智能机用户情况：https://venturebeat.com/2018/09/11/newzoo-smartphone-users-will-top-3-billion-in-2018-hit-3-8-billion-by-2021/

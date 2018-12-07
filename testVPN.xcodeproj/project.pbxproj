@@ -40,6 +40,8 @@
 		5E440AD3212DA3F600778393 /* NetworkExtension.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5E440AD2212DA3F600778393 /* NetworkExtension.framework */; };
 		5E440AD4212DA66000778393 /* NetworkExtension.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5E440AD2212DA3F600778393 /* NetworkExtension.framework */; };
 		5E52EABF2188A555009DD858 /* CocoaAsyncSocket.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5E52EABD2188A222009DD858 /* CocoaAsyncSocket.framework */; };
+		5E577E1621BA2FB400CA82E4 /* Reachability.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E577E1521BA2FB400CA82E4 /* Reachability.swift */; };
+		5E577E1721BA302F00CA82E4 /* Reachability.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E577E1521BA2FB400CA82E4 /* Reachability.swift */; };
 		5E61941B214FC7EA00FE8C6A /* NetlogsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E61941A214FC7EA00FE8C6A /* NetlogsTableViewController.swift */; };
 		5E6FA3FA21AE53960001DEF2 /* SQLite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5ED10894213E31B6001A6752 /* SQLite.framework */; };
 		5E815393218ED1DE003F4163 /* SOCKS5Enums.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E815392218ED1DE003F4163 /* SOCKS5Enums.swift */; };
@@ -234,6 +236,7 @@
 		5E440AD0212D9CAD00778393 /* util.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = util.swift; sourceTree = "<group>"; };
 		5E440AD2212DA3F600778393 /* NetworkExtension.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = NetworkExtension.framework; path = System/Library/Frameworks/NetworkExtension.framework; sourceTree = SDKROOT; };
 		5E52EABD2188A222009DD858 /* CocoaAsyncSocket.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CocoaAsyncSocket.framework; path = Carthage/Build/iOS/CocoaAsyncSocket.framework; sourceTree = "<group>"; };
+		5E577E1521BA2FB400CA82E4 /* Reachability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reachability.swift; sourceTree = "<group>"; };
 		5E61941A214FC7EA00FE8C6A /* NetlogsTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetlogsTableViewController.swift; sourceTree = "<group>"; };
 		5E71DE652154A39F005B283A /* arch.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = arch.md; sourceTree = "<group>"; };
 		5E71DE6D2158C438005B283A /* paper.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = paper.md; sourceTree = "<group>"; };
@@ -460,6 +463,7 @@
 		5E4409BB212BE35000778393 = {
 			isa = PBXGroup;
 			children = (
+				5E577E0D21BA2F9700CA82E4 /* NetworkState */,
 				5E11DE3A21915CFB0010A3AE /* crash.md */,
 				5E71DE6E2158C45B005B283A /* TODO.md */,
 				5E71DE6D2158C438005B283A /* paper.md */,
@@ -561,6 +565,14 @@
 				5E815392218ED1DE003F4163 /* SOCKS5Enums.swift */,
 			);
 			path = testVPNServices;
+			sourceTree = "<group>";
+		};
+		5E577E0D21BA2F9700CA82E4 /* NetworkState */ = {
+			isa = PBXGroup;
+			children = (
+				5E577E1521BA2FB400CA82E4 /* Reachability.swift */,
+			);
+			path = NetworkState;
 			sourceTree = "<group>";
 		};
 		5EB87C2F21B2BA9B007B94DD /* BDLocation */ = {
@@ -1290,6 +1302,7 @@
 				5E19A50A214CE16200D2C358 /* SwitchTableViewCell.swift in Sources */,
 				5EB87C3521B2BF84007B94DD /* TableViewController.swift in Sources */,
 				5E19A520214E329700D2C358 /* VPNDetailTableViewController.swift in Sources */,
+				5E577E1621BA2FB400CA82E4 /* Reachability.swift in Sources */,
 				5E19A518214CE2EF00D2C358 /* PerAppProxyConfigurationTableViewController.swift in Sources */,
 				5E4409C8212BE35000778393 /* AppDelegate.swift in Sources */,
 				5E19A50C214CE17000D2C358 /* NameValueTableViewCell.swift in Sources */,
@@ -1300,6 +1313,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5E577E1721BA302F00CA82E4 /* Reachability.swift in Sources */,
 				5ED108A4213E3E55001A6752 /* Database.swift in Sources */,
 				5E440A68212D94C000778393 /* AppProxyProvider.swift in Sources */,
 				5E24CB4E213181E000E909D5 /* ClientAppProxyConnection.swift in Sources */,

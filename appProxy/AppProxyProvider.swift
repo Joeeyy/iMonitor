@@ -60,9 +60,12 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
     
     var recordFlow = false
     
+    // to listen to network state
+    let reachability = Reachability()
+    
     var database: Database!
+    var wifiConnected = false
     var currentPublicIP: String = ""
-    var currentPrivateIP: String = ""
     
     // basically, for every flow, there must be a TCP connection established between this flow to SOCKS5 server tcp listener port, and we need to determine to which flow this tcp socket belongs.
     var flows = [GCDAsyncSocket:NEAppProxyFlow]()
@@ -86,6 +89,7 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
         newTunnel.delegate = self
         database = Database()
         
+        networkStatusListener()
         currentPublicIP = database.tableAPPCONFIGQueryItem(key: "ip")!
         
         if let error = newTunnel.startTunnel(self) {
@@ -117,9 +121,6 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
     
     // Handle a new flow of network data created by an application
     override func handleNewFlow(_ flow: NEAppProxyFlow) -> Bool {
-        if self.currentPrivateIP == ""{
-            currentPrivateIP = (self.tunnel?.connection?.localAddress as! NWHostEndpoint).hostname
-        }
         
         // Add code here to handle the incoming flow.
         testVPNLog(self.TAG+"A new PER_APP_PROXY_FLOW comes, start handling it. flow: \(flow)")
@@ -252,7 +253,7 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                     let timeStr = getTime()
                     let srcIP = self.currentPublicIP
                     let srcPort: String
-                    if self.currentPublicIP != self.currentPrivateIP {
+                    if self.wifiConnected {
                         srcPort = "0"
                     }
                     else{
@@ -277,13 +278,12 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                     let dataDicStr = toJSONString(dict: dataDic)
                     labDic["record"] = dataDicStr
                     var jsonData:NSData? = nil
+                    
                     do {
                         jsonData  = try JSONSerialization.data(withJSONObject: labDic, options:JSONSerialization.WritingOptions.prettyPrinted) as NSData
                         postRequest(url: "http://119.23.215.159/test/checkin/labRec.php", jsonData: jsonData){ _ in
                         }
-                    } catch let error as NSError{
-                        testVPNLog("\(error)")
-                    }
+                    } catch {}
                     if self.recordFlow{
                         self.database.tableNETWORKFLOWLOGInsertItem(srcIP: srcIP, srcPort: srcPort, dstIP: dstIP, dstPort: dstPort, length:length, proto: "TCP", time: timeStr, app: app, direction: "out")
                     }
@@ -473,7 +473,7 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                     let timeStr = getTime()
                     let srcIP = self.currentPublicIP
                     let srcPort: String
-                    if self.currentPublicIP != self.currentPrivateIP {
+                    if self.wifiConnected {
                         srcPort = "0"
                     }
                     else{
@@ -498,14 +498,12 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                     let dataDicStr = toJSONString(dict: dataDic)
                     labDic["record"] = dataDicStr
                     var jsonData:NSData? = nil
+                    
                     do {
                         jsonData  = try JSONSerialization.data(withJSONObject: labDic, options:JSONSerialization.WritingOptions.prettyPrinted) as NSData
                         postRequest(url: "http://119.23.215.159/test/checkin/labRec.php", jsonData: jsonData){ _ in
-                            
                         }
-                    } catch let error as NSError{
-                        testVPNLog("\(error)")
-                    }
+                    } catch {}
                     if self.recordFlow{
                         self.database.tableNETWORKFLOWLOGInsertItem(srcIP: self.currentPublicIP, srcPort: srcPort, dstIP: dstIP, dstPort: dstPort, length:length, proto: "TCP", time: timeStr, app: app, direction: "out")
                     }
@@ -577,7 +575,7 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                     let srcPort = (TCPFlow.remoteEndpoint as! NWHostEndpoint).port
                     let dstIP = self.currentPublicIP
                     let dstPort: String
-                    if self.currentPublicIP != self.currentPrivateIP {
+                    if self.wifiConnected {
                         dstPort = "0"
                     }
                     else{
@@ -600,14 +598,12 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                     let dataDicStr = toJSONString(dict: dataDic)
                     labDic["record"] = dataDicStr
                     var jsonData:NSData? = nil
+                    
                     do {
                         jsonData  = try JSONSerialization.data(withJSONObject: labDic, options:JSONSerialization.WritingOptions.prettyPrinted) as NSData
                         postRequest(url: "http://119.23.215.159/test/checkin/labRec.php", jsonData: jsonData){ _ in
-                            
                         }
-                    } catch let error as NSError{
-                        testVPNLog("\(error)")
-                    }
+                    } catch {}
                     if self.recordFlow{
                         self.database.tableNETWORKFLOWLOGInsertItem(srcIP: srcIP, srcPort: srcPort, dstIP: dstIP, dstPort: dstPort, length:length, proto: "TCP", time: timeStr, app: app, direction: "in")
                     }
@@ -728,7 +724,7 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                 let timeStr = getTime()
                 let srcIP = self.currentPublicIP
                 let srcPort: String
-                if self.currentPublicIP != self.currentPrivateIP {
+                if self.wifiConnected {
                     srcPort = "0"
                 }
                 else{
@@ -753,14 +749,12 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                 let dataDicStr = toJSONString(dict: dataDic)
                 labDic["record"] = dataDicStr
                 var jsonData:NSData? = nil
+                
                 do {
                     jsonData  = try JSONSerialization.data(withJSONObject: labDic, options:JSONSerialization.WritingOptions.prettyPrinted) as NSData
                     postRequest(url: "http://119.23.215.159/test/checkin/labRec.php", jsonData: jsonData){ _ in
-                        
                     }
-                } catch let error as NSError{
-                    testVPNLog("\(error)")
-                }
+                } catch {}
                 if self.recordFlow{
                     self.database.tableNETWORKFLOWLOGInsertItem(srcIP: srcIP, srcPort: srcPort, dstIP: dstIP, dstPort: dstPort, length:length, proto: "UDP", time: timeStr, app: app, direction: "out")
                 }
@@ -848,7 +842,7 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                 let timeStr = getTime()
                 let srcIP = self.currentPublicIP
                 let srcPort: String
-                if self.currentPublicIP != self.currentPrivateIP {
+                if self.wifiConnected {
                     srcPort = "0"
                 }
                 else{
@@ -873,14 +867,12 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                 let dataDicStr = toJSONString(dict: dataDic)
                 labDic["record"] = dataDicStr
                 var jsonData:NSData? = nil
+                
                 do {
                     jsonData  = try JSONSerialization.data(withJSONObject: labDic, options:JSONSerialization.WritingOptions.prettyPrinted) as NSData
                     postRequest(url: "http://119.23.215.159/test/checkin/labRec.php", jsonData: jsonData){ _ in
-                        
                     }
-                } catch let error as NSError{
-                    testVPNLog("\(error)")
-                }
+                } catch {}
                 if self.recordFlow{
                     self.database.tableNETWORKFLOWLOGInsertItem(srcIP: srcIP, srcPort: srcPort, dstIP: dstIP, dstPort: dstPort, length:length, proto: "UDP", time: timeStr, app: app, direction: "out")
                 }
@@ -948,7 +940,7 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
         let timeStr = getTime()
         let dstIP = self.currentPublicIP
         let dstPort: String
-        if self.currentPublicIP != self.currentPrivateIP {
+        if self.wifiConnected {
             dstPort = "0"
         }
         else{
@@ -973,14 +965,12 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
         let dataDicStr = toJSONString(dict: dataDic)
         labDic["record"] = dataDicStr
         var jsonData:NSData? = nil
+        
         do {
             jsonData  = try JSONSerialization.data(withJSONObject: labDic, options:JSONSerialization.WritingOptions.prettyPrinted) as NSData
             postRequest(url: "http://119.23.215.159/test/checkin/labRec.php", jsonData: jsonData){ _ in
-                
             }
-        } catch let error as NSError{
-            testVPNLog("\(error)")
-        }
+        } catch {}
         if self.recordFlow{
             self.database.tableNETWORKFLOWLOGInsertItem(srcIP: srcIP, srcPort: srcPort, dstIP: dstIP, dstPort: dstPort, length:length, proto: "UDP", time: timeStr, app: app, direction: "in")
         }
@@ -1081,5 +1071,70 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
     
     override func wake() {
         // Add code here to wake up.
+    }
+    
+    /////////////////////////////////////
+    // MARK: To listen to networkState //
+    /////////////////////////////////////
+    func networkStatusListener() {
+        NotificationCenter.default.addObserver(self, selector: #selector(self.reachabilityChanged), name: Notification.Name.reachabilityChanged, object: reachability)
+        do {
+            try reachability?.startNotifier()
+        }catch{
+            testVPNLog("start reachability notifier failed.")
+        }
+    }
+    
+    deinit {
+        reachability?.stopNotifier()
+        NotificationCenter.default.removeObserver(self, name: Notification.Name.reachabilityChanged, object: reachability)
+    }
+    
+    func reachabilityChanged(note: NSNotification){
+        let reachability = note.object as! Reachability
+        
+        if reachability.isReachable {
+            if reachability.isReachableViaWiFi{
+                testVPNLog("Reachability: WIFI)")
+                self.wifiConnected = true
+            }
+            else{
+                testVPNLog("Reachability: MobileNet)")
+                self.wifiConnected = false
+            }
+            
+            // update ip record
+            
+            let params: NSMutableDictionary = NSMutableDictionary()
+            params["idfa"] = self.idfa?.uuidString
+            var jsonData:NSData? = nil
+            do {
+                jsonData  = try JSONSerialization.data(withJSONObject: params, options:JSONSerialization.WritingOptions.prettyPrinted) as NSData
+            } catch {
+            }
+            
+            postRequest(url: "http://119.23.215.159/test/checkin/checkin.php", jsonData: jsonData) { retStr in
+                do{
+                    if let json = try JSONSerialization.jsonObject(with: retStr as! Data, options: []) as? NSDictionary {
+                        let lastIP = self.database.tableAPPCONFIGQueryItem(key: "ip")
+                        if lastIP == nil {
+                            self.database.tableAPPCONFIGInsertItem(key: "ip", value: json.value(forKey: "ip") as! String)
+                        }else if lastIP == json.value(forKey: "ip") as? String{
+                            // do nothing
+                        }else {
+                            self.database.tableAPPCONFIGUpdateItem(key: "ip", value: json.value(forKey: "ip") as! String)
+                        }
+                        self.currentPublicIP = json.value(forKey: "ip") as! String
+                        testVPNLog("Reachability: \(self.currentPublicIP)")
+                    }
+                }
+                catch{
+                    
+                }
+            }
+            
+        }else{
+            // no network
+        }
     }
 }
