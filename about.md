@@ -77,7 +77,8 @@ JSON格式：
   ...
 }
 ```
-服务器接收后，按照不同ifda、app，对应存放在ifda目录下的{app}.log文本中。
+服务器接收后，按照不同ifda、app，对应存放在ifda目录下的{app}.log文本中。  
+[国际版QQ的记录示例](https://app.ainassine.cn/test/checkin/353B317C-0B24-4C0F-B840-92A77F6350BC/com.tencent.mQQi.log)
 
 
 ### 位置记录

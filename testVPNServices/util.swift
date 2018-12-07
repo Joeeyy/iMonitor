@@ -313,7 +313,7 @@ public func postRequest(url: String, jsonData: NSData?, completion: @escaping ((
     request.httpBody = jsonData as! Data
     let dataTask: URLSessionDataTask = session.dataTask(with: request as URLRequest) { (data, response, error) in
         guard data != nil else {
-            testVPNLog("Make post has no response.")
+            //testVPNLog("Make post has no response.")
             return
         }
         
