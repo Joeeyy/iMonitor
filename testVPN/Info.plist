@@ -24,31 +24,11 @@
 	<dict>
 		<key>12DDB7F7-C529-497E-AB79-B02870741EC4</key>
 		<array>
-			<string>cn.edu.nudt.MakePost</string>
-			<string>com.tencent.xin</string>
-			<string>cn.edu.nudt.MakeUDPRequest</string>
-			<string>com.tencent.mQQi</string>
-			<string>yyvoice</string>
-			<string>com.meelive.ingkee</string>
-			<string>tv.douyu.live</string>
-			<string>com.huajiao.seeding</string>
-			<string>com.yy.kiwi</string>
 			<string>com.ss.iphone.ugc.Aweme</string>
-			<string>com.jiangjia.gif</string>
-			<string>com.yixia.iphone</string>
-			<string>com.tencent.live4iphone</string>
-			<string>com.ss.iphone.article.Video</string>
+			<string>com.tencent.xin</string>
+			<string>com.tencent.mQQi</string>
 			<string>com.qiyi.iphone</string>
-			<string>com.youku.YouKu</string>
-			<string>com.hunantv.imgotv</string>
-			<string>tv.danmaku.bilianime</string>
-			<string>com.qihoo.video</string>
 			<string>com.tencent.QQMusic</string>
-			<string>com.kugou.kugou1002</string>
-			<string>com.yeelion.kwplayer</string>
-			<string>com.xiami.spark</string>
-			<string>com.netease.cloudmusic</string>
-			<string>com.PandaTV.Live-iPhone</string>
 		</array>
 	</dict>
 	<key>NSAppTransportSecurity</key>

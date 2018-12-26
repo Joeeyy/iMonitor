@@ -24,6 +24,7 @@ import NetworkExtension
 import testVPNServices
 import CocoaAsyncSocket
 import AdSupport
+import Foundation
 
 
 // Indicating data type
@@ -38,6 +39,7 @@ public enum SOCK_TAG: Int {
 
 // A NEAppProxyProvider sub-class that implements the client side of the SimpleTunnel tunneling protocol.
 class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelegate, GCDAsyncUdpSocketDelegate {
+    
     
     //////////////////////
     // MARK: Properties //
@@ -54,7 +56,7 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
     
     /// support for socks5 communication
     
-    let queue = DispatchQueue.init(label: "PerAppProxy")
+    //let queue = DispatchQueue.init(label: "PerAppProxy")
     
     let idfa = ASIdentifierManager.shared()?.advertisingIdentifier
     
@@ -63,7 +65,7 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
     // to listen to network state
     let reachability = Reachability()
     
-    var database: Database!
+    //var database: Database!
     var wifiConnected = false
     var currentPublicIP: String = ""
     
@@ -77,6 +79,7 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
     var utSocks = [GCDAsyncUdpSocket: GCDAsyncSocket]()
     // This is built for UDP support. Datagrams that need to be sent out but haven't
     var datagramsOutstanding = [GCDAsyncUdpSocket: Int]()
+    var udpSocketLastUsedTime = [GCDAsyncUdpSocket: Double]()
     
     // MARK: NEAppProxyProvider
     let TAG = "AppProxyProvider: "
@@ -87,10 +90,10 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
         testVPNLog(self.TAG + "starting PER_APP_PROXY tunnel")
         let newTunnel = ClientTunnel()
         newTunnel.delegate = self
-        database = Database()
+        //database = Database()
         
         networkStatusListener()
-        currentPublicIP = database.tableAPPCONFIGQueryItem(key: "ip")!
+        //currentPublicIP = database.tableAPPCONFIGQueryItem(key: "ip")!
         
         if let error = newTunnel.startTunnel(self) {
             completionHandler(error as NSError)
@@ -121,21 +124,31 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
     
     // Handle a new flow of network data created by an application
     override func handleNewFlow(_ flow: NEAppProxyFlow) -> Bool {
-        
+        let currentTimeStamp = Date().timeIntervalSince1970
+        for (k,v) in self.udpSocketLastUsedTime.enumerated(){
+            if currentTimeStamp - v.value >= 5{
+                self.udpflows[v.key]?.closeReadWithError(nil)
+                self.udpflows[v.key]?.closeWriteWithError(nil)
+                if self.utSocks[v.key] != nil {
+                    closeSock(self.utSocks[v.key]!, forFlow: nil, reason: "udp timeout")
+                }
+            }
+        }
+        testVPNLog("TEST MEM \(self.utSocks.count),\(self.udpflows.count), \(self.udpSocks.count), \(self.flows.count), \(self.datagramsOutstanding.count), \(self.udpSocketLastUsedTime.count)")
         // Add code here to handle the incoming flow.
         testVPNLog(self.TAG+"A new PER_APP_PROXY_FLOW comes, start handling it. flow: \(flow)")
         // @deprecate var newConnection: ClientAppProxyConnection?
         
-        guard let clientTunnel = tunnel else { return false }
+        guard tunnel != nil else { return false }
         let serverEndpoint = tunnel?.connection?.endpoint as! NWHostEndpoint
         let serverIP = serverEndpoint.hostname
         let serverPort = serverEndpoint.port
-        
+
         let socket = GCDAsyncSocket()
         socket.delegate = self
-        socket.delegateQueue = queue
-        //socket.delegateQueue = DispatchQueue.init(label: "TCP")
-        
+        //socket.delegateQueue = queue
+        socket.delegateQueue = DispatchQueue.main
+
         flows[socket] = flow
         do{
             testVPNLog(self.TAG + "try to establish a TCP connection for a new flow.")
@@ -171,28 +184,24 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
             if datagramsOutstanding.index(forKey: udpSock) != nil {
                 datagramsOutstanding.remove(at: datagramsOutstanding.index(forKey: udpSock)!)
             }
+            if self.udpSocketLastUsedTime[udpSock] != nil {
+                self.udpSocketLastUsedTime.removeValue(forKey: udpSock)
+            }
             udpSock.close()
+            
         }
+        guard flows.index(forKey: sock) != nil else{
+            sock.disconnect()
+            return
+        }
+        flows.remove(at: flows.index(forKey: sock)!)
         sock.disconnect()
-        if flows.index(forKey: sock) != nil{
-            flows.remove(at: flows.index(forKey: sock)!)
-        }
     }
     
     ////////////////////////////////////////
     /// MARK: Delegate for GCDAsyncSocket //
     ////////////////////////////////////////
-    
-    //
-    func socketDidSecure(_ sock: GCDAsyncSocket) {
-    }
-    
-    func socketDidCloseReadStream(_ sock: GCDAsyncSocket) {
-    }
-    
-    func socket(_ sock: GCDAsyncSocket, didConnectTo url: URL) {
-    }
-    
+
     // when tcp connection established, make socks5 auth negotiation request, here I just provide NO_AUTH support.
     func socket(_ sock: GCDAsyncSocket, didConnectToHost host: String, port: UInt16) {
         testVPNLog(self.TAG + "TCP connection has established, going to negotiate for auth method")
@@ -210,8 +219,8 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                 authNegoRequest.append(0x01 as UInt8)
                 authNegoRequest.append(SOCKS5_AUTH_METHOD.NO_AUTH.rawValue)
                 testVPNLog(self.TAG + "write authNegorequest1 : \(NSMutableData.init(data: Data.init(bytes: authNegoRequest)))")
-                sock.write(Data.init(bytes: authNegoRequest), withTimeout: TimeInterval(-1), tag: SOCK_TAG.AUTH_NEGO.rawValue)
-                sock.readData(withTimeout: TimeInterval(-1), tag: 0)
+                sock.write(Data.init(bytes: authNegoRequest), withTimeout: TimeInterval(5), tag: SOCK_TAG.AUTH_NEGO.rawValue)
+                sock.readData(withTimeout: TimeInterval(5), tag: 0)
             }
         }else{
             // auth method negotiation request
@@ -220,11 +229,12 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
             authNegoRequest.append(0x01 as UInt8)
             authNegoRequest.append(SOCKS5_AUTH_METHOD.NO_AUTH.rawValue)
             testVPNLog(self.TAG + "write authNegorequest2 : \(NSMutableData.init(data: Data.init(bytes: authNegoRequest)))")
-            sock.write(Data.init(bytes: authNegoRequest), withTimeout: TimeInterval(-1), tag: SOCK_TAG.AUTH_NEGO.rawValue)
-            sock.readData(withTimeout: TimeInterval(-1), tag: 0)
+            sock.write(Data.init(bytes: authNegoRequest), withTimeout: TimeInterval(5), tag: SOCK_TAG.AUTH_NEGO.rawValue)
+            sock.readData(withTimeout: TimeInterval(5), tag: 0)
+            
         }
     }
-    
+
     // some data is written to a TCP connection, here we need to insert a record to database
     func socket(_ sock: GCDAsyncSocket, didWriteDataWithTag tag: Int) {
         if tag == SOCK_TAG.DATA.rawValue{
@@ -246,9 +256,9 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                         return
                     }
                     testVPNLog(self.TAG + "going to write data to sock: \(NSMutableData.init(data: readData))")
-                    sock.write(readData, withTimeout: TimeInterval(-1), tag: SOCK_TAG.DATA.rawValue)
-                    sock.readData(withTimeout: TimeInterval(-1), tag: 0)
-                    
+                    sock.write(readData, withTimeout: TimeInterval(5), tag: SOCK_TAG.DATA.rawValue)
+                    sock.readData(withTimeout: TimeInterval(5), tag: 0)
+
                     /// Going to record this packet
                     let timeStr = getTime()
                     let srcIP = self.currentPublicIP
@@ -263,7 +273,7 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                     let dstPort = (TCPFlow.remoteEndpoint as! NWHostEndpoint).port
                     let length = readData.count
                     let app = TCPFlow.metaData.sourceAppSigningIdentifier
-                    
+
                     let labDic: NSMutableDictionary = NSMutableDictionary()
                     let dataDic: NSMutableDictionary = NSMutableDictionary()
                     labDic["idfa"] = self.idfa?.uuidString
@@ -278,26 +288,25 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                     let dataDicStr = toJSONString(dict: dataDic)
                     labDic["record"] = dataDicStr
                     var jsonData:NSData? = nil
-                    
+
                     do {
                         jsonData  = try JSONSerialization.data(withJSONObject: labDic, options:JSONSerialization.WritingOptions.prettyPrinted) as NSData
-                        postRequest(url: "http://119.23.215.159/test/checkin/labRec.php", jsonData: jsonData){ _ in
-                        }
+                        postRequestWithNoResponse(url: "http://119.23.215.159/test/checkin/labRec.php", jsonData: jsonData)
                     } catch {}
                     if self.recordFlow{
-                        self.database.tableNETWORKFLOWLOGInsertItem(srcIP: srcIP, srcPort: srcPort, dstIP: dstIP, dstPort: dstPort, length:length, proto: "TCP", time: timeStr, app: app, direction: "out")
+                        //self.database.tableNETWORKFLOWLOGInsertItem(srcIP: srcIP, srcPort: srcPort, dstIP: dstIP, dstPort: dstPort, length:length, proto: "TCP", time: timeStr, app: app, direction: "out")
                     }
                 }
             }
         }
     }
-    
+
     // data is read from a TCP connection, here we could get many possibilities
     // 1. it's reply of auth_nego_request
     // 2. it's reply of TCP_CONNECT or UDP_ASSOCIATE reqest
     // 3. it's data of former TCP request.
     func socket(_ sock: GCDAsyncSocket, didRead data: Data, withTag tag: Int) {
-        
+
         if data.count == 2 {    // parse as AUTH_NEGO_REPLY
             let VER = data[0] as UInt8
             let METHOD = data[1] as UInt8
@@ -320,7 +329,7 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                 return
             }
             // safe here, go send request according to actual flow type
-            if let TCPFlow = flows[sock] as? NEAppProxyTCPFlow {
+            if let TCPFlow = flows[sock] as? NEAppProxyTCPFlow {  // send TCP_CONNECT_REQ
                 var TCP_CONNECT_REQ = [UInt8]()
                 TCP_CONNECT_REQ += [SOCKS5_VER, SOCKS5_CMD.CONNECT.rawValue, SOCKS5_RSV]
                 let dst = TCPFlow.remoteEndpoint as! NWHostEndpoint
@@ -337,20 +346,21 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                 }
                 testVPNLog(self.TAG + "TCP connect request to: \(dstIP):\(dstPort)")
                 testVPNLog(self.TAG + "write TCP Connect request: \(NSMutableData.init(data: Data.init(bytes: TCP_CONNECT_REQ)))")
-                sock.write(Data.init(bytes: TCP_CONNECT_REQ), withTimeout: TimeInterval(-1), tag: SOCK_TAG.TCP_CONNECT.rawValue)
-                sock.readData(withTimeout: TimeInterval(-1), tag: 0)
+                sock.write(Data.init(bytes: TCP_CONNECT_REQ), withTimeout: TimeInterval(5), tag: SOCK_TAG.TCP_CONNECT.rawValue)
+                sock.readData(withTimeout: TimeInterval(5), tag: 0)
             }
-            else if let UDPFlow = flows[sock] as? NEAppProxyUDPFlow {
-                
+            else if let UDPFlow = flows[sock] as? NEAppProxyUDPFlow {// send UDP_ASSOCIATE_REQ
+
                 // open up a new UDP socket
                 let udpsock = GCDAsyncUdpSocket()
                 udpsock.setDelegate(self)
-                udpsock.setDelegateQueue(queue)
-                //udpsock.setDelegateQueue(DispatchQueue.init(label: "UDP"))
-                
+                //udpsock.setDelegateQueue(DispatchQueue.main)
+                udpsock.setDelegateQueue(DispatchQueue.init(label: "UDP"))
+
                 udpSocks[sock] = udpsock
                 utSocks[udpsock] = sock
                 udpflows[udpsock] = UDPFlow
+                testVPNLog("test mem just new udp \(self.utSocks.count),\(self.udpflows.count), \(self.udpSocks.count), \(self.flows.count), \(self.datagramsOutstanding.count) , \(self.udpSocketLastUsedTime.count)")
                 
                 testVPNLog("Before open: \(UDPFlow.localEndpoint)")
                 let tempUDPFlowLocalEndpoint = UDPFlow.localEndpoint as! NWHostEndpoint
@@ -362,7 +372,7 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                     sa.sin_family = sa_family_t(AF_INET)
                     sa.sin_addr.s_addr = inet_addr(sock.localHost!)
                     try udpsock.bind(toAddress: NSData.init(bytes: &sa, length: MemoryLayout<sockaddr_in>.size) as Data)
-                    
+
                     let localAddress = tempUDPFlowLocalEndpoint.port != "0" ? NWHostEndpoint(hostname: tempUDPFlowLocalEndpoint.hostname, port: "\(tempUDPFlowLocalEndpoint.port)") : NWHostEndpoint(hostname: udpsock.localHost()!, port: "\(udpsock.localPort())")
                     
                     if tempUDPFlowLocalEndpoint.port != "0"{
@@ -376,7 +386,7 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                             self.closeSock(sock, forFlow: UDPFlow, reason: "Error happened while opening UDP flow: \(error)")
                             return
                         }
-                        
+
 //                        do {
 //                            try udpsock.beginReceiving()
 //                        }
@@ -387,17 +397,17 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
 //                            self.closeSock(sock, forFlow: self.flows[sock]!, reason: "Error happened when UDP socket begin receiving. \(receiveError)")
 //                            return
 //                        }
-                        
+
                         var UDP_ASSOCIATE_REQ = [UInt8]()
                         UDP_ASSOCIATE_REQ += [SOCKS5_VER, SOCKS5_CMD.UDP_ASSOCIATE.rawValue, SOCKS5_RSV, SOCKS5_ATYP.IPV4.rawValue]
                         UDP_ASSOCIATE_REQ += string2Hex(input: "0.0.0.0", mod: "ip")
                         UDP_ASSOCIATE_REQ += string2Hex(input: "\(udpsock.localPort())", mod: "port")
                         testVPNLog("Before open, request address: \(udpsock.localHost()) request port: \(udpsock.localPort())")
                         //UDP_ASSOCIATE_REQ += string2Hex(input: "0", mod: "port")
-                        
+
                         testVPNLog(self.TAG + "write UDP ASSOCIATE REQUEST: \(NSMutableData.init(data: Data.init(bytes: UDP_ASSOCIATE_REQ)))")
-                        sock.write(Data.init(bytes: UDP_ASSOCIATE_REQ), withTimeout: TimeInterval(-1), tag: SOCK_TAG.UDP_ASSOCIATE.rawValue)
-                        sock.readData(withTimeout: TimeInterval(-1), tag: 0)
+                        sock.write(Data.init(bytes: UDP_ASSOCIATE_REQ), withTimeout: TimeInterval(5), tag: SOCK_TAG.UDP_ASSOCIATE.rawValue)
+                        sock.readData(withTimeout: TimeInterval(5), tag: 0)
                     }
                 }
                 catch let error as NSError {
@@ -449,7 +459,7 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                 closeSock(sock, forFlow: flows[sock]!, reason: "\(REP)")
                 return
             }
-            
+
             if let TCPFlow = flows[sock] as? NEAppProxyTCPFlow {
                 TCPFlow.readData { data, error in
                     testVPNLog(self.TAG + "data read from TCP Flow: \(NSMutableData.init(data: data!))\n\(TCPFlow)")
@@ -466,9 +476,9 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                         return
                     }
                     testVPNLog(self.TAG + "going to write data to sock: \(NSMutableData.init(data: readData))")
-                    sock.write(readData, withTimeout: TimeInterval(-1), tag: SOCK_TAG.DATA.rawValue)
-                    sock.readData(withTimeout: TimeInterval(-1), tag: 0)
-                    
+                    sock.write(readData, withTimeout: TimeInterval(5), tag: SOCK_TAG.DATA.rawValue)
+                    sock.readData(withTimeout: TimeInterval(5), tag: 0)
+
                     /// Going to record this packet
                     let timeStr = getTime()
                     let srcIP = self.currentPublicIP
@@ -498,14 +508,13 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                     let dataDicStr = toJSONString(dict: dataDic)
                     labDic["record"] = dataDicStr
                     var jsonData:NSData? = nil
-                    
+
                     do {
                         jsonData  = try JSONSerialization.data(withJSONObject: labDic, options:JSONSerialization.WritingOptions.prettyPrinted) as NSData
-                        postRequest(url: "http://119.23.215.159/test/checkin/labRec.php", jsonData: jsonData){ _ in
-                        }
+                        postRequestWithNoResponse(url: "http://119.23.215.159/test/checkin/labRec.php", jsonData: jsonData)
                     } catch {}
                     if self.recordFlow{
-                        self.database.tableNETWORKFLOWLOGInsertItem(srcIP: self.currentPublicIP, srcPort: srcPort, dstIP: dstIP, dstPort: dstPort, length:length, proto: "TCP", time: timeStr, app: app, direction: "out")
+                        //self.database.tableNETWORKFLOWLOGInsertItem(srcIP: self.currentPublicIP, srcPort: srcPort, dstIP: dstIP, dstPort: dstPort, length:length, proto: "TCP", time: timeStr, app: app, direction: "out")
                     }
                 }
             }
@@ -513,7 +522,7 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                 guard let udpSock = udpSocks[sock] else{
                     fatalError("UDP Sock missing!")
                 }
-                    
+                
                 let ATYP = data[3]
                 // for TCP BND_ADDR and BND_PORT are of no use
                 var BND_ADDR = [UInt8]()
@@ -537,7 +546,7 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                     UDPFlow.closeReadWithError(nil)
                     return
                 }
-                    
+
                 // going to connect to udp server socket
                 let ipString = (self.tunnel?.connection?.endpoint as! NWHostEndpoint).hostname
                 let port: UInt16 = UInt16(BND_PORT[0]) * 256 + UInt16(BND_PORT[1])
@@ -550,7 +559,7 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                     UDPFlow.closeReadWithError(nil)
                     return
                 }
-                
+
                 // ! TCP connection should never be disconnected
                 // should consider how make this TCP socket alive for long
                 sock.readData(withTimeout: TimeInterval(-1), tag: 0)
@@ -566,9 +575,9 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                         testVPNLog(self.TAG + "Error happened while writing TCP data back to app: \(error), \nsock: \(sock), \nflow: \(TCPFlow)")
                         TCPFlow.closeWriteWithError(nil)
                         self.closeSock(sock, forFlow: TCPFlow, reason: "Error happened while writing data back to app: \(error)")
-                        return 
+                        return
                     }
-                    
+
                     /// Going to record this packet
                     let timeStr = getTime()
                     let srcIP = (TCPFlow.remoteEndpoint as! NWHostEndpoint).hostname
@@ -583,7 +592,7 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                     }
                     let length = data.count
                     let app = TCPFlow.metaData.sourceAppSigningIdentifier
-                    
+
                     let labDic: NSMutableDictionary = NSMutableDictionary()
                     let dataDic: NSMutableDictionary = NSMutableDictionary()
                     labDic["idfa"] = self.idfa?.uuidString
@@ -598,17 +607,16 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                     let dataDicStr = toJSONString(dict: dataDic)
                     labDic["record"] = dataDicStr
                     var jsonData:NSData? = nil
-                    
+
                     do {
                         jsonData  = try JSONSerialization.data(withJSONObject: labDic, options:JSONSerialization.WritingOptions.prettyPrinted) as NSData
-                        postRequest(url: "http://119.23.215.159/test/checkin/labRec.php", jsonData: jsonData){ _ in
-                        }
+                        postRequestWithNoResponse(url: "http://119.23.215.159/test/checkin/labRec.php", jsonData: jsonData)
                     } catch {}
                     if self.recordFlow{
-                        self.database.tableNETWORKFLOWLOGInsertItem(srcIP: srcIP, srcPort: srcPort, dstIP: dstIP, dstPort: dstPort, length:length, proto: "TCP", time: timeStr, app: app, direction: "in")
+                        //self.database.tableNETWORKFLOWLOGInsertItem(srcIP: srcIP, srcPort: srcPort, dstIP: dstIP, dstPort: dstPort, length:length, proto: "TCP", time: timeStr, app: app, direction: "in")
                     }
-                    
-                    sock.readData(withTimeout: TimeInterval(-1), tag: 0)
+
+                    sock.readData(withTimeout: TimeInterval(5), tag: 0)
                 }
             }
             else if let UDPFlow = flows[sock] as? NEAppProxyUDPFlow {
@@ -616,50 +624,43 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
             }
         }
     }
-    
+
     // when tcp connection closed, check all connections and flows having relationship with this tcp sock, and close them all
     func socketDidDisconnect(_ sock: GCDAsyncSocket, withError err: Error?) {
-//        guard let flow = flows[sock] else {
-//            return
-//        }
-//        closeSock(sock, forFlow: flow, reason: "auto disconnect")
+        testVPNLog("test MEM socket did disconnect. \(self.utSocks.count),\(self.udpflows.count), \(self.udpSocks.count), \(self.flows.count), \(self.datagramsOutstanding.count) , \(self.udpSocketLastUsedTime.count)")
+        guard flows[sock] != nil else{
+            return
+        }
+        closeSock(sock, forFlow: nil, reason: "auto disconnect")
     }
-    
-    func socket(_ sock: GCDAsyncSocket, didAcceptNewSocket newSocket: GCDAsyncSocket) {
-    }
-    
-    func socket(_ sock: GCDAsyncSocket, didReadPartialDataOfLength partialLength: UInt, tag: Int) {
-    }
-    
-    func socket(_ sock: GCDAsyncSocket, didWritePartialDataOfLength partialLength: UInt, tag: Int) {
-        testVPNLog(self.TAG + "did write particalData of length: \(partialLength)")
-    }
-    
-    func socket(_ sock: GCDAsyncSocket, didReceive trust: SecTrust, completionHandler: @escaping (Bool) -> Void) {
-    }
-    
+
     /////////////////////////////////
     /// MARK: UDP Socket Delegate ///
     /////////////////////////////////
-    
+
     func udpSocketDidClose(_ sock: GCDAsyncUdpSocket, withError error: Error?) {
+        testVPNLog("test MEM socket did close. \(self.utSocks.count),\(self.udpflows.count), \(self.udpSocks.count), \(self.flows.count), \(self.datagramsOutstanding.count), \(self.udpSocketLastUsedTime.count) ")
         testVPNLog("UDP Socket did close due to Error [\(sock.localPort())]: \(error)")
-        //closeSock(self.utSocks[sock], forFlow: nil, reason: "no reason")
+        guard self.utSocks[sock] != nil else{
+            return
+        }
+        closeSock(self.utSocks[sock]!, forFlow: nil, reason: "no reason")
     }
-    
+
     // UDP socket did have connected to an address
     func udpSocket(_ sock: GCDAsyncUdpSocket, didConnectToAddress address: Data) {
+        self.udpSocketLastUsedTime[sock] = Date().timeIntervalSince1970
         var addr:sockaddr_in = sockaddr_in()
         NSData.init(data: address).getBytes(&addr, length: MemoryLayout<sockaddr>.size)
         let tmpPort = in_port_t(bigEndian: addr.sin_port)
         let tmpAddr = in_addr_t(bigEndian: addr.sin_addr.s_addr)
         
         testVPNLog(self.TAG + "UDP socket did connect to address: \(tmpAddr>>24&0xff).\(tmpAddr>>16&0xff).\(tmpAddr>>8&0xff).\(tmpAddr>>0&0xff):\(tmpPort) from \(sock.localHost()):\(sock.localPort())")
-        
+
         guard let UDPFlow = udpflows[sock] else{
             fatalError("Missing UDP flow...")
         }
-        
+
         do {
             try sock.beginReceiving()
         }
@@ -670,7 +671,7 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
             self.closeSock(self.utSocks[sock]!, forFlow: nil, reason: "Error happened when UDP socket begin receiving. \(receiveError)")
             return
         }
-        
+
         testVPNLog("+++++++ \(UDPFlow)\n\(sock.localHost()):\(sock.localPort())\n\(UDPFlow.localEndpoint)")
         UDPFlow.readDatagrams { datagrams, remoteEndPoints, readError in
             guard let readDatagrams = datagrams,
@@ -679,22 +680,25 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                     testVPNLog(self.TAG + "Failed to read data from the UDP flow. [\(tmpPort)]")
                     self.closeSock(self.utSocks[sock]!, forFlow: UDPFlow, reason: "Failed to read data from the UDP flow. [\(tmpPort)]")
                     UDPFlow.closeReadWithError(nil)
-                    
+
                     return
             }
-            
+
             guard !readDatagrams.isEmpty && readEndpoints.count == readDatagrams.count else {
                 testVPNLog(self.TAG + "[\(sock.localPort())]Received EOF on the UDP flow. Close the flow from read direction...[\(tmpPort)]")
                 UDPFlow.closeReadWithError(nil)
+                guard self.utSocks[sock] != nil else{
+                    return
+                }
                 self.closeSock(self.utSocks[sock]!, forFlow: UDPFlow, reason: "Received EOF on the UDP flow. Close the flow from read direction...[\(tmpPort)]")
                 return
             }
-            
+
             self.datagramsOutstanding[sock] = readDatagrams.count
-            
+
             for (index, datagram) in readDatagrams.enumerated() {
                 guard let endpoint = readEndpoints[index] as? NWHostEndpoint else { continue }
-                
+
                 let rsvHex = [SOCKS5_RSV,SOCKS5_RSV] as [UInt8]
                 let FRAG = [0x00] as [UInt8]
                 let ATYP: [UInt8]
@@ -708,7 +712,7 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                     let lengthHex = [UInt8(endpoint.hostname.count)]
                     hostHex = lengthHex + Array(endpoint.hostname.utf8) as [UInt8]
                 }
-                
+
                 let portHex = string2Hex(input: endpoint.port, mod: "port")
                 let data = [UInt8](datagram)
                 var payload = [UInt8]()
@@ -718,8 +722,7 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                 payload += hostHex
                 payload += portHex
                 payload += data
-                
-                
+
                 /// Going to record this packet
                 let timeStr = getTime()
                 let srcIP = self.currentPublicIP
@@ -734,7 +737,7 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                 let dstPort = endpoint.port
                 let length = datagram.count
                 let app = UDPFlow.metaData.sourceAppSigningIdentifier
-                
+
                 let labDic: NSMutableDictionary = NSMutableDictionary()
                 let dataDic: NSMutableDictionary = NSMutableDictionary()
                 labDic["idfa"] = self.idfa?.uuidString
@@ -749,31 +752,31 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                 let dataDicStr = toJSONString(dict: dataDic)
                 labDic["record"] = dataDicStr
                 var jsonData:NSData? = nil
-                
+
                 do {
                     jsonData  = try JSONSerialization.data(withJSONObject: labDic, options:JSONSerialization.WritingOptions.prettyPrinted) as NSData
-                    postRequest(url: "http://119.23.215.159/test/checkin/labRec.php", jsonData: jsonData){ _ in
-                    }
+                    postRequestWithNoResponse(url: "http://119.23.215.159/test/checkin/labRec.php", jsonData: jsonData)
                 } catch {}
                 if self.recordFlow{
-                    self.database.tableNETWORKFLOWLOGInsertItem(srcIP: srcIP, srcPort: srcPort, dstIP: dstIP, dstPort: dstPort, length:length, proto: "UDP", time: timeStr, app: app, direction: "out")
+                    //self.database.tableNETWORKFLOWLOGInsertItem(srcIP: srcIP, srcPort: srcPort, dstIP: dstIP, dstPort: dstPort, length:length, proto: "UDP", time: timeStr, app: app, direction: "out")
                 }
-                
-                sock.send(Data.init(bytes: payload), withTimeout: TimeInterval(-1), tag: 0)
+
+                sock.send(Data.init(bytes: payload), withTimeout: TimeInterval(5), tag: 0)
                 //sock.send(Data.init(bytes: payload), toHost: sock.connectedHost()!, port: sock.connectedPort(), withTimeout: TimeInterval(-1), tag: 0)
             }
         }
     }
-    
+
     // UDP socket did have sent data with tag
     func udpSocket(_ sock: GCDAsyncUdpSocket, didSendDataWithTag tag: Int) {
+        self.udpSocketLastUsedTime[sock] = Date().timeIntervalSince1970
         //testVPNLog(self.TAG + "utSocks.length: \(utSocks.count)\nudpSocks.length: \(udpSocks.count)\nflows.length: \(flows.count)\nudpflows.length: \(udpflows.count)\ndatagramsOutstanding: \(datagramsOutstanding)")
         testVPNLog("******* did send with sock: \(sock.localHost()):\(sock.localPort()) ==> \(sock.connectedHost()):\(sock.connectedPort())\n\(udpflows[sock])\n\(udpflows[sock]?.localEndpoint)")
         let UDPFlow = udpflows[sock]
         if self.datagramsOutstanding[sock]! > 0{
             self.datagramsOutstanding[sock] = self.datagramsOutstanding[sock]! - 1
         }
-        
+
         guard self.datagramsOutstanding[sock] == 0 else{
             return
         }
@@ -793,23 +796,26 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                     UDPFlow?.closeReadWithError(nil)
                 }
                 else{
-                    testVPNLog(self.TAG + "cFailed to read data from UDP flow.[\(sock.localPort())]")
+                    testVPNLog(self.TAG + "Failed to read data from UDP flow.[\(sock.localPort())]")
+                    self.closeSock(self.utSocks[sock]!, forFlow: UDPFlow!, reason: "Failed to read data from the UDP flow. [\(sock.localPort())]")
                 }
                 return
             }
-            
+
             guard !readDatagrams.isEmpty && readEndpoints.count == readDatagrams.count else {
                 testVPNLog(self.TAG + "[\(sock.localPort())]Received EOF on the UDP flow. Close the flow from read direction...[\(sock.localPort())]")
                 UDPFlow!.closeReadWithError(nil)
-                self.closeSock(self.utSocks[sock]!, forFlow: UDPFlow!, reason: "Received EOF on the UDP flow. Close the flow from read direction...[\(sock.localPort())]")
+                if self.utSocks[sock] != nil {
+                    self.closeSock(self.utSocks[sock]!, forFlow: UDPFlow!, reason: "Received EOF on the UDP flow. Close the flow from read direction...[\(sock.localPort())]")
+                }
                 return
             }
 
             self.datagramsOutstanding[sock] = readDatagrams.count
-            
+
             for (index, datagram) in readDatagrams.enumerated() {
                 guard let endpoint = readEndpoints[index] as? NWHostEndpoint else { continue }
-                
+
                 
                 let rsvHex = [SOCKS5_RSV,SOCKS5_RSV] as [UInt8]
                 let FRAG = [0x00] as [UInt8]
@@ -826,7 +832,7 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                     hostHex = lengthHex + Array(endpoint.hostname.utf8) as [UInt8]
                     
                 }
-                
+
                 let portHex = string2Hex(input: endpoint.port, mod: "port")
                 let data = [UInt8](datagram)
                 var payload = [UInt8]()
@@ -836,8 +842,8 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                 payload += hostHex
                 payload += portHex
                 payload += data
-                
-                
+
+
                 /// Going to record this packet
                 let timeStr = getTime()
                 let srcIP = self.currentPublicIP
@@ -852,7 +858,7 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                 let dstPort = endpoint.port
                 let length = datagram.count
                 let app = UDPFlow!.metaData.sourceAppSigningIdentifier
-                
+
                 let labDic: NSMutableDictionary = NSMutableDictionary()
                 let dataDic: NSMutableDictionary = NSMutableDictionary()
                 labDic["idfa"] = self.idfa?.uuidString
@@ -870,41 +876,31 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
                 
                 do {
                     jsonData  = try JSONSerialization.data(withJSONObject: labDic, options:JSONSerialization.WritingOptions.prettyPrinted) as NSData
-                    postRequest(url: "http://119.23.215.159/test/checkin/labRec.php", jsonData: jsonData){ _ in
-                    }
+                    postRequestWithNoResponse(url: "http://119.23.215.159/test/checkin/labRec.php", jsonData: jsonData)
                 } catch {}
                 if self.recordFlow{
-                    self.database.tableNETWORKFLOWLOGInsertItem(srcIP: srcIP, srcPort: srcPort, dstIP: dstIP, dstPort: dstPort, length:length, proto: "UDP", time: timeStr, app: app, direction: "out")
+                    //self.database.tableNETWORKFLOWLOGInsertItem(srcIP: srcIP, srcPort: srcPort, dstIP: dstIP, dstPort: dstPort, length:length, proto: "UDP", time: timeStr, app: app, direction: "out")
                 }
-                
-                sock.send(Data.init(bytes: payload), withTimeout: TimeInterval(-1), tag: 0)
+
+                sock.send(Data.init(bytes: payload), withTimeout: TimeInterval(5), tag: 0)
                 //sock.send(Data.init(bytes: payload), toHost: sock.connectedHost()!, port: sock.connectedPort(), withTimeout: TimeInterval(-1), tag: 0)
             }
         }
     }
-    
-    func udpSocket(_ sock: GCDAsyncUdpSocket, didNotConnect error: Error?) {
-        
-    }
-    
-    func udpSocket(_ sock: GCDAsyncUdpSocket, didNotSendDataWithTag tag: Int, dueToError error: Error?) {
-        testVPNLog(self.TAG + "[\(sock.localPort())]Sock to \(sock.connectedHost()):\(sock.connectedPort()) Did not send data with tag: \(tag) due to error: \(error)")
-    }
-    
+
     // UDP socket did have received data from address with FilterContext
-    
     func udpSocket(_ sock: GCDAsyncUdpSocket, didReceive data: Data, fromAddress address: Data, withFilterContext filterContext: Any?) {
+        self.udpSocketLastUsedTime[sock] = Date().timeIntervalSince1970
         testVPNLog("[\(sock.localPort())] received data: \(NSMutableData.init(data: data))]")
         var sa = sockaddr_in()
         NSData.init(data: address).getBytes(&sa, length: MemoryLayout<sockaddr>.size)
-        
+
         let tmpAddr = sa.sin_addr.s_addr
         testVPNLog("[\(sock.localPort())]Received udp data from address: \(tmpAddr>>24&0xff).\(tmpAddr>>16&0xff).\(tmpAddr>>8&0xff).\(tmpAddr>>0&0xff):\(sa.sin_port)!! \ndata: \(NSMutableData.init(data: data))")
         guard let flow = udpflows[sock] as? NEAppProxyUDPFlow else{
-            testVPNLog("Missing UDP flow....")
             return
         }
-        
+
         let FRAG = data[2]
         if FRAG != 0x00 as UInt8{
             testVPNLog(self.TAG + "[\(sock.localPort())]UDP datagrams FRAG not supported now.")
@@ -913,7 +909,7 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
         var udpIPHex = [UInt8]()
         var udpPort: UInt16 = 0
         var datagramHex = [UInt8]()
-        
+
         switch ATYP {
         case SOCKS5_ATYP.IPV4.rawValue:
             udpIPHex += data[4...7]
@@ -930,12 +926,12 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
         default:
             testVPNLog(self.TAG + "[\(sock.localPort())]Unexpected address type: \(ATYP)")
         }
-        
+
         let datagram = [ Data.init(bytes: datagramHex) ]
         let endpoint = [ NWHostEndpoint(hostname: "\(udpIPHex[0]).\(udpIPHex[1]).\(udpIPHex[2]).\(udpIPHex[3])", port: "\(udpPort)") ]
         //let endpoint = [ NWHostEndpoint(hostname: sock.connectedHost()!, port: "\(sock.connectedPort())") ]
         testVPNLog("sent by \(endpoint)")
-        
+
         /// Going to record this packet
         let timeStr = getTime()
         let dstIP = self.currentPublicIP
@@ -950,7 +946,7 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
         let srcPort = endpoint[0].port
         let length = datagram[0].count
         let app = flow.metaData.sourceAppSigningIdentifier
-        
+
         let labDic: NSMutableDictionary = NSMutableDictionary()
         let dataDic: NSMutableDictionary = NSMutableDictionary()
         labDic["idfa"] = self.idfa?.uuidString
@@ -965,21 +961,24 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
         let dataDicStr = toJSONString(dict: dataDic)
         labDic["record"] = dataDicStr
         var jsonData:NSData? = nil
-        
+
         do {
             jsonData  = try JSONSerialization.data(withJSONObject: labDic, options:JSONSerialization.WritingOptions.prettyPrinted) as NSData
-            postRequest(url: "http://119.23.215.159/test/checkin/labRec.php", jsonData: jsonData){ _ in
-            }
+            postRequestWithNoResponse(url: "http://119.23.215.159/test/checkin/labRec.php", jsonData: jsonData)
         } catch {}
         if self.recordFlow{
-            self.database.tableNETWORKFLOWLOGInsertItem(srcIP: srcIP, srcPort: srcPort, dstIP: dstIP, dstPort: dstPort, length:length, proto: "UDP", time: timeStr, app: app, direction: "in")
+            //self.database.tableNETWORKFLOWLOGInsertItem(srcIP: srcIP, srcPort: srcPort, dstIP: dstIP, dstPort: dstPort, length:length, proto: "UDP", time: timeStr, app: app, direction: "in")
         }
-        
+
         flow.writeDatagrams(datagram, sentBy: endpoint) { error in
             if error != nil {
                 testVPNLog("[\(sock.localPort())]Error happened while writing datagram back to UDP Flow: \(error) \n\(flow)\nremoteEndpoint: \(endpoint[0])")
                 sock.pauseReceiving()
+                
                 flow.closeWriteWithError(nil)
+                if self.utSocks[sock] != nil{
+                    self.closeSock(self.utSocks[sock]!, forFlow: nil, reason: "[\(sock.localPort())]Error happened while writing datagram back to UDP Flow: \(error) \n\(flow)\nremoteEndpoint: \(endpoint[0])")
+                }
                 return
             }
             testVPNLog("******++ [\(sock.localPort())]Write UDP Datagram back to app succeeded! \n remoteEndpoint: \(endpoint[0]), datagram: \(NSMutableData.init(data: datagram[0]))\n\(flow)\n\(sock.connectedHost()):\(sock.connectedPort())\n\(sock.localHost()):\(sock.localPort())\n\(flow)\n\(flow.localEndpoint)")
@@ -1116,14 +1115,14 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
             postRequest(url: "http://119.23.215.159/test/checkin/checkin.php", jsonData: jsonData) { retStr in
                 do{
                     if let json = try JSONSerialization.jsonObject(with: retStr as! Data, options: []) as? NSDictionary {
-                        let lastIP = self.database.tableAPPCONFIGQueryItem(key: "ip")
-                        if lastIP == nil {
-                            self.database.tableAPPCONFIGInsertItem(key: "ip", value: json.value(forKey: "ip") as! String)
-                        }else if lastIP == json.value(forKey: "ip") as? String{
-                            // do nothing
-                        }else {
-                            self.database.tableAPPCONFIGUpdateItem(key: "ip", value: json.value(forKey: "ip") as! String)
-                        }
+                        //let lastIP = self.database.tableAPPCONFIGQueryItem(key: "ip")
+                        //if lastIP == nil {
+//                            self.database.tableAPPCONFIGInsertItem(key: "ip", value: json.value(forKey: "ip") as! String)
+//                        }else if lastIP == json.value(forKey: "ip") as? String{
+//                            // do nothing
+//                        }else {
+//                            self.database.tableAPPCONFIGUpdateItem(key: "ip", value: json.value(forKey: "ip") as! String)
+//                        }
                         self.currentPublicIP = json.value(forKey: "ip") as! String
                         testVPNLog("Reachability: \(self.currentPublicIP)")
                     }

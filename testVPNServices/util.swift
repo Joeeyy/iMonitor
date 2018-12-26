@@ -337,6 +337,22 @@ public func postRequest(url: String, jsonData: NSData?, completion: @escaping ((
     dataTask.resume()
 }
 
+public func postRequestWithNoResponse(url: String, jsonData: NSData?){
+    let sessionConfig = URLSessionConfiguration.default
+    sessionConfig.timeoutIntervalForRequest = 5.0
+    sessionConfig.timeoutIntervalForResource = 5.0
+    let session: URLSession = URLSession(configuration: sessionConfig)
+    let url : NSURL = NSURL(string: url)!
+
+    let request: NSMutableURLRequest = NSMutableURLRequest(url : url as URL)
+    request.httpMethod = "POST"
+    request.httpBody = jsonData! as Data
+    let task = session.dataTask(with: request as URLRequest) { _ in
+    }
+    task.resume()
+    //session.finishTasksAndInvalidate()
+}
+
 public struct Netlog {
     public var id: Int
     public var srcIP: String

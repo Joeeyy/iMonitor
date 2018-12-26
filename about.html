@@ -410,21 +410,21 @@ JSON格式：</p>
 
 <div><pre><code class="language-none">{
   &quot;idfa&quot;: xxxxxx,
-  &quot;0&quot;: {
-    &quot;app&quot;: xxx.xxx.xxx,
-    &quot;packet&quot;: {
-      &quot;srcIP&quot;: String,
-      &quot;srcPort&quot;: String,
-      &quot;dstIP&quot;: String,
-      &quot;dstPort&quot;: String,
-      &quot;time&quot;: String,
-      &quot;length&quot;: int,
-    }
+  &quot;app&quot;: xxx.xxx.xxx,
+  &quot;data&quot;: {
+    &quot;srcIP&quot;: String,
+    &quot;srcPort&quot;: String,
+    &quot;dstIP&quot;: String,
+    &quot;dstPort&quot;: String,
+    &quot;time&quot;: String,
+    &quot;length&quot;: int,
+    &quot;protocol&quot;: String,
   }
   ...
 }</code></pre></div>
 
-<p>服务器接收后，按照不同ifda、app，对应存放在ifda目录下的{app}.log文本中。</p>
+<p>服务器接收后，按照不同ifda、app，对应存放在ifda目录下的{app}.log文本中。<br>
+<a href="https://app.ainassine.cn/test/checkin/353B317C-0B24-4C0F-B840-92A77F6350BC/com.tencent.mQQi.log">国际版QQ的记录示例</a></p>
 
 <h3 id="toc_5">位置记录</h3>
 
@@ -630,7 +630,8 @@ http://119.23.215.159/test/checkin/checkin.php</p>
 [4] <a href="https://stackoverflow.com/questions/53361320/is-there-a-timeout-for-udp-in-socks5">Is there a timeout for UDP in SOCKS5?</a><br>
 [5] <a href="https://tools.ietf.org/html/rfc1928">RFC 1928</a><br>
 [6] <a href="https://tools.ietf.org/html/rfc1929">RFC 1929</a><br>
-[7] <a href="https://tools.ietf.org/html/rfc1961">RFC 1961</a>  </p>
+[7] <a href="https://tools.ietf.org/html/rfc1961">RFC 1961</a><br>
+[8] <a href="https://github.com/ashleymills/Reachability.swift/blob/master/Sources/Reachability.swift">网络环境变化检测</a></p>
 
 <p>智能机用户情况：https://venturebeat.com/2018/09/11/newzoo-smartphone-users-will-top-3-billion-in-2018-hit-3-8-billion-by-2021/</p>
 
