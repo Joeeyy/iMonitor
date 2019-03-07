@@ -92,7 +92,7 @@ class AppProxyProvider: NEAppProxyProvider, TunnelDelegate, GCDAsyncSocketDelega
         s = GCDAsyncSocket()
         s!.setDelegate(self, delegateQueue: DispatchQueue.main)
         do{
-            try s!.connect(toHost: "192.168.0.111", onPort: UInt16(7788))
+            try s!.connect(toHost: "119.23.215.159", onPort: UInt16(7788))
         }
         catch{}
         let newTunnel = ClientTunnel()
